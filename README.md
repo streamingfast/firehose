@@ -1,6 +1,6 @@
 ## Firehose
 
-A firehose-style stream of dfuse Blocks library and app wrapper.
+A firehose-style stream of dfuse Blocks app wrapper.
 
 ### Usage
 
