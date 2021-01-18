@@ -209,7 +209,11 @@ func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store
 
 // IsReady return `true` if the apps is ready to accept requests, `false` is returned
 // otherwise.
-func (a *App) IsReady() bool {
+func (a *App) IsReady(ctx context.Context) bool {
+	if a.IsTerminating() {
+		return false
+	}
+
 	return a.isReady.Load()
 }
 

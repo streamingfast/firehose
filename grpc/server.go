@@ -28,7 +28,7 @@ func NewServer(
 	authenticator dauth.Authenticator,
 	blocksStores []dstore.Store,
 	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
-	isReady func() bool,
+	isReady func(context.Context) bool,
 	listenAddr string,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
@@ -99,8 +99,8 @@ func (s *Server) Launch() {
 	s.Server.Launch(s.listenAddr)
 }
 
-func createHealthCheck(isReady func() bool) dgrpc.HealthCheck {
+func createHealthCheck(isReady func(ctx context.Context) bool) dgrpc.HealthCheck {
 	return func(ctx context.Context) (bool, interface{}, error) {
-		return isReady(), nil, nil
+		return isReady(ctx), nil, nil
 	}
 }
