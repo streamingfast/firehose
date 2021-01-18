@@ -19,7 +19,8 @@ import (
 
 type Server struct {
 	*dgrpc.Server
-	logger *zap.Logger
+	listenAddr string
+	logger     *zap.Logger
 }
 
 func NewServer(
@@ -48,7 +49,7 @@ func NewServer(
 	blockStreamService.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		preprocessor, err := filterPreprocessorFactory(req.IncludeFilterExpr, req.ExcludeFilterExpr)
 		if err != nil {
-			return nil, fmt.Errorf("parsing filter expression: %w", err)
+			return nil, fmt.Errorf("filter preprocessor factory: %w", err)
 		}
 
 		return preprocessor, nil
@@ -88,9 +89,14 @@ func NewServer(
 	})
 
 	return &Server{
-		Server: grpcServer,
-		logger: logger,
+		Server:     grpcServer,
+		listenAddr: strings.ReplaceAll(listenAddr, "*", ""),
+		logger:     logger,
 	}
+}
+
+func (s *Server) Launch() {
+	s.Server.Launch(s.listenAddr)
 }
 
 func createHealthCheck(isReady func() bool) dgrpc.HealthCheck {

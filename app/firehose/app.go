@@ -134,6 +134,8 @@ func (a *App) Run() error {
 		go subscriptionHub.Launch()
 	}
 
+	go server.Launch()
+
 	if withLive {
 		// Blocks app startup until ready
 		a.logger.Info("waiting until hub is real-time synced")
