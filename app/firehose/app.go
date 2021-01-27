@@ -48,9 +48,6 @@ type Modules struct {
 	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
 	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
 	Tracker                   *bstream.Tracker
-
-	// Optional dependencies
-	BlockFilter func(blk *bstream.Block) error
 }
 
 type App struct {
