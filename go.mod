@@ -5,7 +5,7 @@ require (
 	cloud.google.com/go/storage v1.5.0 // indirect
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/dfuse-io/bstream v0.0.2-0.20210128140947-5aab63679fd7
+	github.com/dfuse-io/bstream v0.0.2-0.20210202171502-50843431b131
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dgrpc v0.0.0-20210128133958-db1ca95920e4
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
@@ -33,3 +33,5 @@ go 1.13
 // This is required to fix build where 0.1.0 version is not considered a valid version because a v0 line does not exists
 // We replace with same commit, simply tricking go and tell him that's it's actually version 0.0.3
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
+
+replace github.com/dfuse-io/bstream => /Users/julien/codebase/dfuse-io/bstream
