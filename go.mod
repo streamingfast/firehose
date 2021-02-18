@@ -5,7 +5,7 @@ require (
 	cloud.google.com/go/storage v1.5.0 // indirect
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/dfuse-io/bstream v0.0.2-0.20210218040922-3fcd3bea1335
+	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dgrpc v0.0.0-20210128133958-db1ca95920e4
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
