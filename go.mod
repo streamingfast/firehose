@@ -7,7 +7,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
-	github.com/dfuse-io/dgrpc v0.0.0-20210128133958-db1ca95920e4
+	github.com/dfuse-io/dgrpc v0.0.0-20210309152232-10776c4e5ec1
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20210203172334-dec78c6098a6

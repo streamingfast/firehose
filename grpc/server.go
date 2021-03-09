@@ -80,9 +80,7 @@ func NewServer(
 		options = append(options, dgrpc.PlainTextServer())
 	}
 
-	if authenticator.IsAuthenticationTokenRequired() {
-		options = append(options, dgrpc.WithAuthChecker(authenticator.Check))
-	}
+	options = append(options, dgrpc.WithAuthChecker(authenticator.Check))
 
 	grpcServer := dgrpc.NewServer2(options...)
 
