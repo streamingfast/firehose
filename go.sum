@@ -94,6 +94,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c h1:ebrUj1rR2g1ErpCM
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20210116004319-046123544d11 h1:vqU0qh2M4Kv57QEBijxECKOxhM+sdadgx1JjZY1iMdU=
 github.com/dfuse-io/dgrpc v0.0.0-20210116004319-046123544d11/go.mod h1:SQUqYjDen2kzhbM+pvNceNtbevla8o7eNX8idtDJDHA=
+github.com/dfuse-io/dgrpc v0.0.0-20210309152232-10776c4e5ec1 h1:h9mUgix69ZeWw3IpYmDCwjc9oK7OjwdNeF21G6eT1AM=
+github.com/dfuse-io/dgrpc v0.0.0-20210309152232-10776c4e5ec1/go.mod h1:SQUqYjDen2kzhbM+pvNceNtbevla8o7eNX8idtDJDHA=
 github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a h1:p8UQaHbdKvVRRko0E2FFTuzbAgQhwZUtogdrfQ3C1ow=
 github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a/go.mod h1:QFR4Lo8aueGD5u+0HO2A3Un3dM+1pj6NjxYhLGKSNNI=
 github.com/dfuse-io/dmetrics v0.0.0-20200406214800-499fc7b320ab/go.mod h1:bTeE3yXvn/O8f0hw7wOstnUrKTCw9HDzC6aBtldPVRI=
