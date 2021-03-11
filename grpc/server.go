@@ -61,10 +61,11 @@ func NewServer(
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
-			Source:      "firehose",
-			Kind:        "gRPC Stream",
-			Method:      "Blocks",
-			EgressBytes: int64(response.XXX_Size()),
+			Source:         "firehose",
+			Kind:           "gRPC Stream",
+			Method:         "Blocks",
+			EgressBytes:    int64(response.XXX_Size()),
+			ResponsesCount: 1,
 		}, ctx)
 		//////////////////////////////////////////////////////////////////////
 	})
