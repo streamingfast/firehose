@@ -10,6 +10,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
 	dauth "github.com/dfuse-io/dauth/authenticator"
+	redisAuth "github.com/dfuse-io/dauth/authenticator/redis"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dstore"
@@ -62,15 +63,16 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
-		time.Sleep(1 * time.Second)
+		creds := dauth.GetCredentials(ctx)
+		quota := 1
 
-		block := &pbbstream.Block{}
-		err := proto.Unmarshal(response.Block.Value, block)
+		switch c := creds.(type) {
+		case *redisAuth.Credentials:
+			quota = c.Quota
+		}
 
-		if err != nil {
-			logger.Warn("failed to unmarshal block", zap.Error(err))
-		} else {
-			logger.Info("block", zap.Any("timestamp", block.Timestamp), zap.Uint64("number", block.Number))
+		if quota > 0 {
+			time.Sleep(10 * time.Millisecond)
 		}
 
 		//////////////////////////////////////////////////////////////////////
