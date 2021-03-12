@@ -60,7 +60,9 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
-		logger.Info("block response", zap.Any("block", response.Block))
+		logger.Info("block response", zap.Any("type url", response.Block.TypeUrl))
+
+		response.GetBlock().ProtoMessage()
 
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
