@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
 	dauth "github.com/dfuse-io/dauth/authenticator"
 	redisAuth "github.com/dfuse-io/dauth/authenticator/redis"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dstore"
@@ -62,37 +64,38 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
-		block := &pbbstream.Block{}
-		err := block.XXX_Unmarshal(response.Block.Value)
+		block := &pbcodec.Block{}
+		err := ptypes.UnmarshalAny(response.Block, block)
 
 		if err != nil {
 			logger.Warn("failed to unmarshal block", zap.Error(err))
 		} else {
-			logger.Info("unmarshaled block", zap.String("id", block.Id), zap.Uint64("number", block.Number), zap.Any("timestamp", block.Timestamp))
+			creds := dauth.GetCredentials(ctx)
+			quota := 1
+
+			switch c := creds.(type) {
+			case *redisAuth.Credentials:
+				quota = c.Quota
+			}
+
+			blockTime, err := block.Time()
+
+			// we slow down throughput if the allowed doc quota is not unlimited ("0"), unless it's live blocks (< 5 min)
+			if err == nil && time.Since(blockTime) > 5*time.Minute && quota > 0 {
+				logger.Debug("rate limited, sleep for 100ms before continuing", zap.Int("quota", quota), zap.Time("block_time", blockTime))
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			//////////////////////////////////////////////////////////////////////
+			dmetering.EmitWithContext(dmetering.Event{
+				Source:         "firehose",
+				Kind:           "gRPC Stream",
+				Method:         "Blocks",
+				EgressBytes:    int64(response.XXX_Size()),
+				ResponsesCount: 1,
+			}, ctx)
+			//////////////////////////////////////////////////////////////////////
 		}
-
-		creds := dauth.GetCredentials(ctx)
-		quota := 1
-
-		switch c := creds.(type) {
-		case *redisAuth.Credentials:
-			quota = c.Quota
-		}
-
-		// we slow down throughput if the allowed doc quota is not unlimited ("0")
-		if quota > 0 {
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		//////////////////////////////////////////////////////////////////////
-		dmetering.EmitWithContext(dmetering.Event{
-			Source:         "firehose",
-			Kind:           "gRPC Stream",
-			Method:         "Blocks",
-			EgressBytes:    int64(response.XXX_Size()),
-			ResponsesCount: 1,
-		}, ctx)
-		//////////////////////////////////////////////////////////////////////
 	})
 
 	options := []dgrpc.ServerOption{
