@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"strings"
 	"time"
 
