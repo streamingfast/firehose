@@ -3,8 +3,6 @@ package grpc
 import (
 	"context"
 	"fmt"
-	pbcodec "github.com/dfuse-io/firehose/pb/dfuse/eosio/codec/v1"
-	"github.com/golang/protobuf/proto"
 	"strings"
 	"time"
 
