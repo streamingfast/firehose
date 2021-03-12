@@ -81,7 +81,7 @@ func NewServer(
 
 		// we slow down throughput if the allowed doc quota is not unlimited ("0")
 		if quota > 0 {
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 
 		//////////////////////////////////////////////////////////////////////
