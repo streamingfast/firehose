@@ -63,6 +63,15 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
+		block := &pbbstream.Block{}
+		err := block.XXX_Unmarshal(response.Block.Value)
+
+		if err != nil {
+			logger.Warn("failed to unmarshal block", zap.Error(err))
+		} else {
+			logger.Info("unmarshaled block", zap.String("id", block.Id), zap.Uint64("number", block.Number), zap.Any("timestamp", block.Timestamp))
+		}
+
 		creds := dauth.GetCredentials(ctx)
 		quota := 1
 
@@ -71,6 +80,7 @@ func NewServer(
 			quota = c.Quota
 		}
 
+		// we slow down throughput if the allowed doc quota is not unlimited ("0")
 		if quota > 0 {
 			time.Sleep(10 * time.Millisecond)
 		}
