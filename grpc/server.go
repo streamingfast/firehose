@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/pingcap/log"
 	"strings"
 	"time"
 
@@ -84,6 +85,11 @@ func NewServer(
 			if err == nil && time.Since(blockTime) > 5*time.Minute && quota > 0 {
 				logger.Debug("rate limited, sleep for 100ms before continuing", zap.Int("quota", quota), zap.Time("block_time", blockTime))
 				time.Sleep(100 * time.Millisecond)
+			} else {
+				if err != nil {
+					log.Warn("failed to parse time from block", zap.Error(err))
+				}
+				logger.Debug("allowing unthrottled access", zap.Int("quota", quota), zap.Time("block_time", blockTime))
 			}
 
 			//////////////////////////////////////////////////////////////////////
