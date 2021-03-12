@@ -3,6 +3,8 @@ package grpc
 import (
 	"context"
 	"fmt"
+	pbcodec "github.com/dfuse-io/firehose/pb/dfuse/eosio/codec/v1"
+	"github.com/golang/protobuf/proto"
 	"strings"
 	"time"
 
@@ -63,7 +65,14 @@ func NewServer(
 
 		logger.Info("block response", zap.Any("type url", response.Block.TypeUrl))
 
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Second)
+
+		block := &pbcodec.Block{}
+		err := proto.Unmarshal(response.Block.Value, block)
+
+		if err != nil {
+			logger.Warn("failed to unmarshal block", zap.Error(err))
+		}
 
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
