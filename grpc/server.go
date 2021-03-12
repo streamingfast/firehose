@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"strings"
 	"time"
 
@@ -61,9 +62,16 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
-		logger.Info("block response", zap.Any("cursor", response.Cursor))
-
 		time.Sleep(1 * time.Second)
+
+		block := &pbbstream.Block{}
+		err := proto.Unmarshal(response.Block.Value, block)
+
+		if err != nil {
+			logger.Warn("failed to unmarshal block", zap.Error(err))
+		} else {
+			logger.Info("block", zap.Any("timestamp", block.Timestamp), zap.Uint64("number", block.Number))
+		}
 
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
