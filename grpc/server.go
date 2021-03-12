@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
@@ -62,7 +63,7 @@ func NewServer(
 
 		logger.Info("block response", zap.Any("type url", response.Block.TypeUrl))
 
-		response.GetBlock().ProtoMessage()
+		time.Sleep(10 * time.Millisecond)
 
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
