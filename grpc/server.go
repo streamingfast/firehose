@@ -63,16 +63,9 @@ func NewServer(
 
 	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 
-		logger.Info("block response", zap.Any("type url", response.Block.TypeUrl))
+		logger.Info("block response", zap.Any("cursor", response.Cursor))
 
 		time.Sleep(1 * time.Second)
-
-		block := &pbcodec.Block{}
-		err := proto.Unmarshal(response.Block.Value, block)
-
-		if err != nil {
-			logger.Warn("failed to unmarshal block", zap.Error(err))
-		}
 
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
