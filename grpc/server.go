@@ -83,7 +83,7 @@ func NewServer(
 
 			// we slow down throughput if the allowed doc quota is not unlimited ("0"), unless it's live blocks (< 5 min)
 			if err == nil && time.Since(blockTime) > 5*time.Minute && rate > 0 {
-				sleep := time.Duration(1/rate) * 1000 * time.Millisecond
+				sleep := time.Duration(1000/rate) * time.Millisecond
 				logger.Debug("rate limited, adding sleep", zap.Int("rate", rate), zap.Duration("sleep", sleep), zap.Time("block_time", blockTime))
 				time.Sleep(sleep)
 			} else {
