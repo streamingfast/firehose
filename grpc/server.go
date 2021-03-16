@@ -72,24 +72,25 @@ func NewServer(
 			logger.Warn("failed to unmarshal block", zap.Error(err))
 		} else {
 			creds := dauth.GetCredentials(ctx)
-			quota := 1
+			rate := 10
 
 			switch c := creds.(type) {
 			case *redisAuth.Credentials:
-				quota = c.Quota
+				rate = c.Rate
 			}
 
 			blockTime, err := block.Time()
 
 			// we slow down throughput if the allowed doc quota is not unlimited ("0"), unless it's live blocks (< 5 min)
-			if err == nil && time.Since(blockTime) > 5*time.Minute && quota > 0 {
-				logger.Debug("rate limited, sleep for 100ms before continuing", zap.Int("quota", quota), zap.Time("block_time", blockTime))
-				time.Sleep(100 * time.Millisecond)
+			if err == nil && time.Since(blockTime) > 5*time.Minute && rate > 0 {
+				sleep := time.Duration(1/rate) * time.Millisecond
+				logger.Debug("rate limited, adding sleep", zap.Int("rate", rate), zap.Duration("sleep", sleep), zap.Time("block_time", blockTime))
+				time.Sleep(sleep)
 			} else {
 				if err != nil {
 					log.Warn("failed to parse time from block", zap.Error(err))
 				}
-				logger.Debug("allowing unthrottled access", zap.Int("quota", quota), zap.Time("block_time", blockTime))
+				logger.Debug("allowing unthrottled access", zap.Int("rate", rate), zap.Time("block_time", blockTime))
 			}
 
 			//////////////////////////////////////////////////////////////////////

@@ -24,4 +24,4 @@ go 1.13
 // We replace with same commit, simply tricking go and tell him that's it's actually version 0.0.3
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
-replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20210309162409-e36ca9ed5287
+replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20210316123228-0097a05cb1f6
