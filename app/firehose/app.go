@@ -39,6 +39,7 @@ type Config struct {
 	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
 	RealtimeTolerance       time.Duration
+	RateLimit               int // Number of blocks to stream per second
 }
 
 type Modules struct {
@@ -123,6 +124,7 @@ func (a *App) Run() error {
 		serverLiveHeadTracker,
 		a.modules.Tracker,
 		a.modules.BlockTrimmer,
+		a.config.RateLimit,
 	)
 
 	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })

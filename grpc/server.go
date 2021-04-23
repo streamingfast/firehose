@@ -3,15 +3,13 @@ package grpc
 import (
 	"context"
 	"fmt"
+	dauth "github.com/dfuse-io/dauth/authenticator"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/pingcap/log"
 	"strings"
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
-	dauth "github.com/dfuse-io/dauth/authenticator"
-	redisAuth "github.com/dfuse-io/dauth/authenticator/redis"
+	"github.com/dfuse-io/bstream/blockstream/v2"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
@@ -39,6 +37,7 @@ func NewServer(
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
 	trimmer blockstream.BlockTrimmer,
+	rateLimit int,
 ) *Server {
 	liveSupport := liveSourceFactory != nil && liveHeadTracker != nil
 	logger.Info("setting up blockstream server (v2)", zap.Bool("live_support", liveSupport))
@@ -71,26 +70,13 @@ func NewServer(
 		if err != nil {
 			logger.Warn("failed to unmarshal block", zap.Error(err))
 		} else {
-			creds := dauth.GetCredentials(ctx)
-			rate := 10
-
-			switch c := creds.(type) {
-			case *redisAuth.Credentials:
-				rate = c.Rate
-			}
 
 			blockTime, err := block.Time()
 
-			// we slow down throughput if the allowed doc quota is not unlimited ("0"), unless it's live blocks (< 5 min)
-			if err == nil && time.Since(blockTime) > 5*time.Minute && rate > 0 {
-				sleep := time.Duration(1000/rate) * time.Millisecond
-				logger.Debug("rate limited, adding sleep", zap.Int("rate", rate), zap.Duration("sleep", sleep), zap.Time("block_time", blockTime))
+			// we slow down throughput if the allowed doc quota is not unlimited ("0") and unless it's live blocks (< 5 min)
+			if err == nil && time.Since(blockTime) > 5*time.Minute && rateLimit > 0 {
+				sleep := time.Duration(1000/rateLimit) * time.Millisecond
 				time.Sleep(sleep)
-			} else {
-				if err != nil {
-					log.Warn("failed to parse time from block", zap.Error(err))
-				}
-				logger.Debug("allowing unthrottled access", zap.Int("rate", rate), zap.Time("block_time", blockTime))
 			}
 
 			//////////////////////////////////////////////////////////////////////
