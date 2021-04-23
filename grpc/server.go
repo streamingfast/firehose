@@ -3,14 +3,14 @@ package grpc
 import (
 	"context"
 	"fmt"
-	dauth "github.com/dfuse-io/dauth/authenticator"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/golang/protobuf/ptypes"
 	"strings"
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream/v2"
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
+	dauth "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dstore"
