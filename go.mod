@@ -1,4 +1,6 @@
-module github.com/dfuse-io/firehose
+module github.com/streamingfast/firehose
+
+go 1.15
 
 require (
 	cloud.google.com/go v0.51.0 // indirect
@@ -28,7 +30,7 @@ require (
 	google.golang.org/grpc v1.29.1
 )
 
-go 1.13
+
 
 // This is required to fix build where 0.1.0 version is not considered a valid version because a v0 line does not exists
 // We replace with same commit, simply tricking go and tell him that's it's actually version 0.0.3

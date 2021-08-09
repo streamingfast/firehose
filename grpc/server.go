@@ -11,7 +11,7 @@ import (
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/firehose"
+	"github.com/streamingfast/firehose"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
