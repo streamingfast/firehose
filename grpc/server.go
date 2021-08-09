@@ -7,12 +7,12 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
-	dauth "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dstore"
-	"github.com/streamingfast/firehose"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	dauth "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/firehose"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -80,7 +80,7 @@ func NewServer(
 		options = append(options, dgrpc.PlainTextServer())
 	}
 
-	options = append(options, dgrpc.WithAuthChecker(authenticator.Check, authenticator.IsAuthenticationTokenRequired()))
+	options = append(options, dgrpc.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
 
 	grpcServer := dgrpc.NewServer2(options...)
 

@@ -23,12 +23,12 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
-	dauth "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
 	"github.com/dfuse-io/shutter"
+	dauth "github.com/streamingfast/dauth/authenticator"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
