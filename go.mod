@@ -7,16 +7,16 @@ require (
 	cloud.google.com/go/storage v1.5.0 // indirect
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/dfuse-io/bstream v0.0.2-0.20210810112308-458fdfd5441b
+	github.com/dfuse-io/bstream v0.0.2-0.20210810125844-72912424b968
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb // indirect
-	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
-	github.com/dfuse-io/dhammer v0.0.0-20201127174908-667b90585063 // indirect
+	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c
+	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
+	github.com/dfuse-io/dstore v0.1.0 // indirect
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c // indirect
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70
 	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
-	github.com/dfuse-io/shutter v1.4.1
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
@@ -28,6 +28,7 @@ require (
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
 	github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4 // indirect
 	github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d // indirect
+	github.com/streamingfast/shutter v1.5.0 // indirect
 	github.com/tidwall/gjson v1.5.0 // indirect
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0

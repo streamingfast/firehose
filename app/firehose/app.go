@@ -27,7 +27,7 @@ import (
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
