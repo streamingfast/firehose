@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
