@@ -24,7 +24,7 @@ import (
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dmetrics"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
 	"github.com/dfuse-io/shutter"
