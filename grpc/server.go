@@ -7,7 +7,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
-	"github.com/dfuse-io/dgrpc"
+	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dstore"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	dauth "github.com/streamingfast/dauth/authenticator"
