@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dfuse-io/bstream"
-	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
+	"github.com/streamingfast/bstream"
+	blockstream "github.com/streamingfast/bstream/blockstream/v2"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dstore"
 	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"

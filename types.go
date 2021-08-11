@@ -1,5 +1,5 @@
 package firehose
 
-import "github.com/dfuse-io/bstream"
+import "github.com/streamingfast/bstream"
 
 type FilterPreprocessorFactory func(includeExpr string, excludeExpr string) (bstream.PreprocessFunc, error)
