@@ -7,14 +7,15 @@ import (
 
 	"github.com/streamingfast/bstream"
 	blockstream "github.com/streamingfast/bstream/blockstream/v2"
-	"github.com/streamingfast/dgrpc"
-	"github.com/streamingfast/dstore"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	dauth "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 type Server struct {
@@ -64,7 +65,7 @@ func NewServer(
 			Source:      "firehose",
 			Kind:        "gRPC Stream",
 			Method:      "Blocks",
-			EgressBytes: int64(response.XXX_Size()),
+			EgressBytes: int64(proto.Size(response)),
 		}, ctx)
 		//////////////////////////////////////////////////////////////////////
 	})
