@@ -336,8 +336,8 @@ github.com/sethvargo/go-retry v0.1.0/go.mod h1:JzIOdZqQDNpPkQDmcqgtteAcxFLtYpNF/
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
-github.com/streamingfast/bstream v0.0.2-0.20210818195539-2295a96e0c68 h1:FtDg2wG4mw//iQyniLhdfKmBxFALxuzrIn2YQIw4tPQ=
-github.com/streamingfast/bstream v0.0.2-0.20210818195539-2295a96e0c68/go.mod h1:RcG/aJ2i6laxXVvRotAcQ97WK4nPhEzStrcoj9usX5s=
+github.com/streamingfast/bstream v0.0.2-0.20210901144836-9a626db444c5 h1:txdYHu+JlMMdhSBOb04CTYvmKtnCVMpzwa0kqS0JbOo=
+github.com/streamingfast/bstream v0.0.2-0.20210901144836-9a626db444c5/go.mod h1:OKY4Lu6Y5+MozsctfGZ9b00/WDfOUNTN3SKNoNjT7mE=
 github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc h1:UHQWJm2df+kNauxV2Gk+0s438Cz051FOiXn4nLr2Pyg=
 github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc/go.mod h1:wwjRBEA7vZZ5kfy3I4LB5NJhFJWN2gaYgpBEmOnDwD8=
 github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 h1:m/3aIPNXCwZ9m/dfYdOs8ftrS7GJl82ipVr6K2aZiBs=
@@ -345,8 +345,9 @@ github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5/go.mod h1:YStE7
 github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb/go.mod h1:zL7vriSdKmvbNntPVlXzPDizifaTwUv6+1TGp6KdO88=
 github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec/go.mod h1:ulVfui/yGXmPBbt9aAqCWdAjM7YxnZkYHzvQktLfw3M=
 github.com/streamingfast/dgrpc v0.0.0-20210810185305-905172f728e8/go.mod h1:jBj49IB1Oa9ILev6cx9CfXl7Td83Mdyn2gJOA9F+vZA=
-github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2 h1:2rzOnMX+lcd4SHTkxKOXyL7BVxVLCgjr0mTq9tVpras=
 github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2/go.mod h1:WG3YAJ2JU1MSKbl+h+Fc887K4Rht2WEvuLa0eQ2bibE=
+github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b h1:FBORjhpkepdgRheKSEWdNch6I48+x4kQ45kmZkJ9pzg=
+github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b/go.mod h1:8TuRw3ksNsJDYItDUHnydt2IURGxB3s6ME4oSKS8rCs=
 github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840 h1:JFEen28d0yLGk5/PvbZipeiqjdjyK3SJbNm9uaVcVvU=
 github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840/go.mod h1:XULhFAiYMZG+Zjr+GfVuLhB/yUugoWp7I7z+Q6z5hM4=
 github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817 h1:VmQEUQBspTJNAefUoHIkaLlvqqQ6AK1XjROxlszoKnI=
@@ -363,7 +364,6 @@ github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a/go.mod h1:4G
 github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308 h1:xlWSfi1BoPfsHtPb0VEHGUcAdBF208LUiFCwfaVPfLA=
 github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308/go.mod h1:K1p8Bj/wG34KJvYzPUqtzpndffmpkrVY11u2hkyxCWQ=
 github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc/go.mod h1:mSi3+mIAffPq/McZ3TqLSmDr8f1v3mi5RHE+zmBHJGk=
-github.com/streamingfast/pbgo v0.0.6-0.20210812023556-e996f9c4fb86 h1:zPDLwkGSdW41KqQsGJu4Q5Qs9c+C82JeqY4oULJY0ro=
 github.com/streamingfast/pbgo v0.0.6-0.20210812023556-e996f9c4fb86/go.mod h1:XKLPtwRtO9JRVfcymM8IIHiJTVIERR+O8uBbdOol3l0=
 github.com/streamingfast/pbgo v0.0.6-0.20210820205306-ba5335146052 h1:kjlGNfF3yky5772l7etF3c7k1sbYlYApJHwF6e/r3UA=
 github.com/streamingfast/pbgo v0.0.6-0.20210820205306-ba5335146052/go.mod h1:fobYEIfCKwPOY+VLX7HXBVuhrn+iZrzujKrpCgfG3+Q=
