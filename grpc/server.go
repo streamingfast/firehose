@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dfuse-io/bstream"
-	blockstream "github.com/dfuse-io/bstream/blockstream/v2"
-	dauth "github.com/dfuse-io/dauth/authenticator"
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dmetering"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/firehose"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	"github.com/streamingfast/bstream"
+	blockstream "github.com/streamingfast/bstream/blockstream/v2"
+	dauth "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/firehose"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 type Server struct {
@@ -28,7 +29,7 @@ func NewServer(
 	authenticator dauth.Authenticator,
 	blocksStores []dstore.Store,
 	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
-	isReady func() bool,
+	isReady func(context.Context) bool,
 	listenAddr string,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
@@ -46,6 +47,9 @@ func NewServer(
 		trimmer,
 	)
 
+	// The preprocessing handler must always be applied even when a cursor is used and there is blocks to process
+	// between the LIB and the Head Block. While the downstream consumer will not necessarly received them, they must
+	// be pre-processed to ensure undos can be sent back if needed.
 	blockStreamService.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		preprocessor, err := filterPreprocessorFactory(req.IncludeFilterExpr, req.ExcludeFilterExpr)
 		if err != nil {
@@ -61,7 +65,7 @@ func NewServer(
 			Source:      "firehose",
 			Kind:        "gRPC Stream",
 			Method:      "Blocks",
-			EgressBytes: int64(response.XXX_Size()),
+			EgressBytes: int64(proto.Size(response)),
 		}, ctx)
 		//////////////////////////////////////////////////////////////////////
 	})
@@ -77,9 +81,7 @@ func NewServer(
 		options = append(options, dgrpc.PlainTextServer())
 	}
 
-	if authenticator.IsAuthenticationTokenRequired() {
-		options = append(options, dgrpc.WithAuthChecker(authenticator.Check))
-	}
+	options = append(options, dgrpc.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
 
 	grpcServer := dgrpc.NewServer2(options...)
 
@@ -99,8 +101,8 @@ func (s *Server) Launch() {
 	s.Server.Launch(s.listenAddr)
 }
 
-func createHealthCheck(isReady func() bool) dgrpc.HealthCheck {
+func createHealthCheck(isReady func(ctx context.Context) bool) dgrpc.HealthCheck {
 	return func(ctx context.Context) (bool, interface{}, error) {
-		return isReady(), nil, nil
+		return isReady(ctx), nil, nil
 	}
 }

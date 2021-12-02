@@ -1,40 +1,24 @@
-module github.com/dfuse-io/firehose
+module github.com/streamingfast/firehose
+
+go 1.15
 
 require (
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
-	github.com/abourget/llerrgroup v0.2.0
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/dfuse-io/bstream v0.0.2-0.20210118170643-057893cea2ef
-	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
-	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
-	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
-	github.com/dfuse-io/dgrpc v0.0.0-20210116004319-046123544d11
-	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
-	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
-	github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9
-	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
-	github.com/dfuse-io/jsonpb v0.0.0-20200602171045-28535c4016a2
-	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69
-	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70
-	github.com/dfuse-io/pbgo v0.0.6-0.20210108215028-712d6889e94a
-	github.com/dfuse-io/shutter v1.4.1
-	github.com/golang/protobuf v1.4.2
-	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
-	github.com/minio/highwayhash v1.0.0
-	github.com/prometheus/client_golang v1.2.1 // indirect
-	github.com/prometheus/client_model v0.1.0 // indirect
-	github.com/stretchr/testify v1.5.1
-	go.opencensus.io v0.22.3
+	github.com/streamingfast/bstream v0.0.2-0.20210901144836-9a626db444c5
+	github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc
+	github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b
+	github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817
+	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
+	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22
+	github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a
+	github.com/streamingfast/pbgo v0.0.6-0.20210820205306-ba5335146052
+	github.com/streamingfast/shutter v1.5.0
 	go.uber.org/atomic v1.6.0
-	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
-	google.golang.org/grpc v1.29.1
-	gopkg.in/yaml.v2 v2.2.8 // indirect
+	google.golang.org/grpc v1.39.1
+	google.golang.org/protobuf v1.27.1
 )
-
-go 1.13
 
 // This is required to fix build where 0.1.0 version is not considered a valid version because a v0 line does not exists
 // We replace with same commit, simply tricking go and tell him that's it's actually version 0.0.3

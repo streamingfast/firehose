@@ -19,16 +19,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream"
-	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
-	"github.com/dfuse-io/bstream/hub"
-	dauth "github.com/dfuse-io/dauth/authenticator"
-	"github.com/dfuse-io/dmetrics"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/firehose"
-	"github.com/dfuse-io/firehose/grpc"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/blockstream"
+	blockstreamv2 "github.com/streamingfast/bstream/blockstream/v2"
+	"github.com/streamingfast/bstream/hub"
+	"github.com/streamingfast/dmetrics"
+	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/firehose"
+	"github.com/streamingfast/firehose/grpc"
+	"github.com/streamingfast/shutter"
+	dauth "github.com/streamingfast/dauth/authenticator"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -38,6 +38,7 @@ type Config struct {
 	BlockStreamAddr         string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
 	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
+	RealtimeTolerance       time.Duration
 }
 
 type Modules struct {
@@ -48,9 +49,6 @@ type Modules struct {
 	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
 	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
 	Tracker                   *bstream.Tracker
-
-	// Optional dependencies
-	BlockFilter func(blk *bstream.Block) error
 }
 
 type App struct {
@@ -202,14 +200,18 @@ func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store
 		fileSourceFactory,
 		liveSourceFactory,
 		hub.Withlogger(a.logger),
-		hub.WithRealtimeTolerance(1*time.Minute),
+		hub.WithRealtimeTolerance(a.config.RealtimeTolerance),
 		hub.WithoutMemoization(), // This should be tweakable on the Hub, by the bstreamv2.Server
 	)
 }
 
 // IsReady return `true` if the apps is ready to accept requests, `false` is returned
 // otherwise.
-func (a *App) IsReady() bool {
+func (a *App) IsReady(ctx context.Context) bool {
+	if a.IsTerminating() {
+		return false
+	}
+
 	return a.isReady.Load()
 }
 
