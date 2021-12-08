@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/streamingfast/bstream"
-	blockstream "github.com/streamingfast/bstream/blockstream/v2"
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dmetering"
@@ -34,11 +33,11 @@ func NewServer(
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
-	trimmer blockstream.BlockTrimmer,
+	trimmer firehose.BlockTrimmer,
 ) *Server {
 	liveSupport := liveSourceFactory != nil && liveHeadTracker != nil
 	logger.Info("setting up blockstream server (v2)", zap.Bool("live_support", liveSupport))
-	blockStreamService := blockstream.NewServer(
+	blockStreamService := firehose.NewServer(
 		logger,
 		blocksStores,
 		liveSourceFactory,
