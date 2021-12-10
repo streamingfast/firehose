@@ -200,7 +200,6 @@ func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store
 		liveSourceFactory,
 		hub.Withlogger(a.logger),
 		hub.WithRealtimeTolerance(a.config.RealtimeTolerance),
-		hub.WithoutMemoization(), // This should be tweakable on the Hub, by the bstreamv2.Server
 	)
 }
 

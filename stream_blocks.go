@@ -77,7 +77,7 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 				return s.liveSourceFactory(bstream.NewPreprocessor(preprocFunc, h))
 			}
 		}
-		options = append(options, firehose.WithLiveSource(liveFactory, false))
+		options = append(options, firehose.WithLiveSource(liveFactory))
 	}
 
 	fhose := firehose.New(fileSourceFactory, request.StartBlockNum, handler, options...)
