@@ -124,15 +124,22 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 	}*/
 
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+		fObj := obj.(*forkable.ForkableObject)
+		switch v := fObj.Obj.(type) { // use filtered block if passed as object
+		case *bstream.Block:
+			if v != nil {
+				block = v
+			}
+		default:
+		}
 
-		any, err := block.ToAny(true, blockInterceptor)
+		anyProtocolBlock, err := block.ToAny(true, blockInterceptor)
 		if err != nil {
 			return fmt.Errorf("to any: %w", err)
 		}
-		fObj := obj.(*forkable.ForkableObject)
 
 		resp := &pbfirehose.Response{
-			Block:  any,
+			Block:  anyProtocolBlock,
 			Step:   stepToProto(fObj.Step),
 			Cursor: fObj.Cursor().ToOpaque(),
 		}
