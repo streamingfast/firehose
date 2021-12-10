@@ -21,14 +21,13 @@ import (
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/blockstream"
-	blockstreamv2 "github.com/streamingfast/bstream/blockstream/v2"
 	"github.com/streamingfast/bstream/hub"
+	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
 	"github.com/streamingfast/shutter"
-	dauth "github.com/streamingfast/dauth/authenticator"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -43,8 +42,8 @@ type Config struct {
 
 type Modules struct {
 	// Required dependencies
-	Authenticator             dauth.Authenticator
-	BlockTrimmer              blockstreamv2.BlockTrimmer
+	Authenticator dauth.Authenticator
+	//BlockTrimmer              firehose.BlockTrimmer
 	FilterPreprocessorFactory firehose.FilterPreprocessorFactory
 	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
 	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
@@ -122,7 +121,7 @@ func (a *App) Run() error {
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
-		a.modules.BlockTrimmer,
+		//a.modules.BlockTrimmer,
 	)
 
 	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })
