@@ -3,7 +3,7 @@ package firehose
 import (
 	"context"
 
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -12,7 +12,7 @@ type BlocksPipe struct {
 	//grpc.ServerStream
 	grpc.ClientStream
 	ctx      context.Context
-	pipeChan chan *pbbstream.BlockResponseV2
+	pipeChan chan *pbfirehose.Response
 	err      error
 }
 
@@ -30,7 +30,7 @@ func (p *BlocksPipe) Context() context.Context {
 	return p.ctx
 }
 
-func (p *BlocksPipe) Send(resp *pbbstream.BlockResponseV2) error {
+func (p *BlocksPipe) Send(resp *pbfirehose.Response) error {
 	select {
 	case <-p.ctx.Done():
 		return p.ctx.Err()
@@ -39,7 +39,7 @@ func (p *BlocksPipe) Send(resp *pbbstream.BlockResponseV2) error {
 	return nil
 }
 
-func (p *BlocksPipe) Recv() (*pbbstream.BlockResponseV2, error) {
+func (p *BlocksPipe) Recv() (*pbfirehose.Response, error) {
 	select {
 	case resp, ok := <-p.pipeChan:
 		if !ok {
@@ -60,12 +60,12 @@ func (p *BlocksPipe) Recv() (*pbbstream.BlockResponseV2, error) {
 	}
 }
 
-func (s Server) BlocksFromLocal(ctx context.Context, req *pbbstream.BlocksRequestV2) pbbstream.BlockStreamV2_BlocksClient {
+func (s Server) BlocksFromLocal(ctx context.Context, req *pbfirehose.Request) pbfirehose.Stream_BlocksClient {
 	cctx, cancel := context.WithCancel(ctx)
 
 	pipe := &BlocksPipe{
 		ctx:      cctx,
-		pipeChan: make(chan *pbbstream.BlockResponseV2),
+		pipeChan: make(chan *pbfirehose.Response),
 	}
 	go func() {
 		err := s.Blocks(req, pipe)

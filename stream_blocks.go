@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"time"
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/firehose"
 	"github.com/streamingfast/bstream/forkable"
 	"github.com/streamingfast/logging"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -19,17 +18,15 @@ import (
 
 var errStopBlockReached = errors.New("stop block reached")
 
-func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbbstream.BlocksRequestV2, logger *zap.Logger) error {
-
-	transforms.GetPreprocFunc(request)
+func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
 	var preprocFunc bstream.PreprocessFunc
-	if s.preprocFactory != nil {
-		pp, err := s.preprocFactory(request)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
-		}
-		preprocFunc = pp
-	}
+	//if s.preprocFactory != nil {
+	//	pp, err := s.preprocFactory(request)
+	//	if err != nil {
+	//		return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
+	//	}
+	//	preprocFunc = pp
+	//}
 
 	var fileSourceOptions []bstream.FileSourceOption
 	if len(s.blocksStores) > 1 {
@@ -52,15 +49,16 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 
 	options := []firehose.Option{
 		firehose.WithLogger(s.logger),
-		firehose.WithForkableSteps(forkable.StepsFromProto(request.ForkSteps)),
+		firehose.WithForkableSteps(stepsFromProto(request.ForkSteps)),
 		firehose.WithLiveHeadTracker(s.liveHeadTracker),
 		firehose.WithTracker(s.tracker),
 		firehose.WithStopBlock(request.StopBlockNum),
 	}
 
-	if request.Confirmations != 0 {
-		options = append(options, firehose.WithConfirmations(request.Confirmations))
-	}
+	// This is etherum specific
+	//if request.Confirmations != 0 {
+	//	options = append(options, firehose.WithConfirmations(request.Confirmations))
+	//}
 
 	if request.StartCursor != "" {
 		cur, err := forkable.CursorFromOpaque(request.StartCursor)
@@ -114,15 +112,16 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 
 }
 
-func (s Server) Blocks(request *pbbstream.BlocksRequestV2, stream pbbstream.BlockStreamV2_BlocksServer) error {
+func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_BlocksServer) error {
 	ctx := stream.Context()
 	logger := logging.Logger(ctx, s.logger)
 	logger.Info("incoming blocks request", zap.Reflect("req", request))
 
 	var blockInterceptor func(blk interface{}) interface{}
-	if s.trimmer != nil {
+	// TODO: move this as a transforms
+	/*if s.trimmer != nil {
 		blockInterceptor = func(blk interface{}) interface{} { return s.trimmer.Trim(blk, request.Details) }
-	}
+	}*/
 
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 
@@ -132,7 +131,7 @@ func (s Server) Blocks(request *pbbstream.BlocksRequestV2, stream pbbstream.Bloc
 		}
 		fObj := obj.(*forkable.ForkableObject)
 
-		resp := &pbbstream.BlockResponseV2{
+		resp := &pbfirehose.Response{
 			Block:  any,
 			Step:   stepToProto(fObj.Step),
 			Cursor: fObj.Cursor().ToOpaque(),
@@ -155,15 +154,53 @@ func (s Server) Blocks(request *pbbstream.BlocksRequestV2, stream pbbstream.Bloc
 	return s.runBlocks(ctx, handlerFunc, request, logger)
 }
 
-func stepToProto(step forkable.StepType) pbbstream.ForkStep {
+func stepToProto(step forkable.StepType) pbfirehose.ForkStep {
 	// This step mapper absorbs the Redo into a New for our consumesr.
 	switch step {
 	case forkable.StepNew, forkable.StepRedo:
-		return pbbstream.ForkStep_STEP_NEW
+		return pbfirehose.ForkStep_STEP_NEW
 	case forkable.StepUndo:
-		return pbbstream.ForkStep_STEP_UNDO
+		return pbfirehose.ForkStep_STEP_UNDO
 	case forkable.StepIrreversible:
-		return pbbstream.ForkStep_STEP_IRREVERSIBLE
+		return pbfirehose.ForkStep_STEP_IRREVERSIBLE
 	}
 	panic("unsupported step")
+}
+
+func stepsFromProto(steps []pbfirehose.ForkStep) forkable.StepType {
+	if len(steps) <= 0 {
+		return forkable.StepNew | forkable.StepRedo | forkable.StepUndo | forkable.StepIrreversible
+	}
+
+	var filter forkable.StepType
+	var containsNew bool
+	var containsUndo bool
+	for _, step := range steps {
+		if step == pbfirehose.ForkStep_STEP_NEW {
+			containsNew = true
+		}
+		if step == pbfirehose.ForkStep_STEP_UNDO {
+			containsUndo = true
+		}
+		filter |= stepFromProto(step)
+	}
+
+	// Redo is output into 'new' and has no proto equivalent
+	if containsNew && containsUndo {
+		filter |= forkable.StepRedo
+	}
+
+	return filter
+}
+
+func stepFromProto(step pbfirehose.ForkStep) forkable.StepType {
+	switch step {
+	case pbfirehose.ForkStep_STEP_NEW:
+		return forkable.StepNew
+	case pbfirehose.ForkStep_STEP_UNDO:
+		return forkable.StepUndo
+	case pbfirehose.ForkStep_STEP_IRREVERSIBLE:
+		return forkable.StepIrreversible
+	}
+	return forkable.StepType(0)
 }

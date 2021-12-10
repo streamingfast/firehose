@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dstore"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/zap"
 )
 
-type PreprocFactory func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error)
+type PreprocFactory func(req *pbfirehose.Request) (bstream.PreprocessFunc, error)
 
 var StreamBlocksParallelFiles = 1
 var StreamBlocksParallelThreads = 10
@@ -18,10 +18,10 @@ type Server struct {
 	liveSourceFactory bstream.SourceFactory
 	liveHeadTracker   bstream.BlockRefGetter
 	tracker           *bstream.Tracker
-	preprocFactory    func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error)
-	ready             bool
-	trimmer           BlockTrimmer
-	postHookFunc      func(context.Context, *pbbstream.BlockResponseV2)
+	//preprocFactory    func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error)
+	ready bool
+	//trimmer      BlockTrimmer
+	postHookFunc func(context.Context, *pbfirehose.Response)
 
 	logger *zap.Logger
 }
@@ -32,7 +32,7 @@ func NewServer(
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
-	trimmer BlockTrimmer,
+	//trimmer BlockTrimmer,
 ) *Server {
 	if tracker != nil {
 		tracker = tracker.Clone()
@@ -46,16 +46,16 @@ func NewServer(
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
 		tracker:           tracker,
-		trimmer:           trimmer,
-		logger:            logger,
+		//trimmer:           trimmer,
+		logger: logger,
 	}
 }
 
-func (s *Server) SetPreprocFactory(f PreprocFactory) {
-	s.preprocFactory = f
-}
+//func (s *Server) SetPreprocFactory(f PreprocFactory) {
+//	s.preprocFactory = f
+//}
 
-func (s *Server) SetPostHook(f func(ctx context.Context, response *pbbstream.BlockResponseV2)) {
+func (s *Server) SetPostHook(f func(ctx context.Context, response *pbfirehose.Response)) {
 	s.postHookFunc = f
 }
 

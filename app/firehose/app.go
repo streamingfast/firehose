@@ -42,8 +42,8 @@ type Config struct {
 
 type Modules struct {
 	// Required dependencies
-	Authenticator             dauth.Authenticator
-	BlockTrimmer              firehose.BlockTrimmer
+	Authenticator dauth.Authenticator
+	//BlockTrimmer              firehose.BlockTrimmer
 	FilterPreprocessorFactory firehose.FilterPreprocessorFactory
 	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
 	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
@@ -121,7 +121,7 @@ func (a *App) Run() error {
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
-		a.modules.BlockTrimmer,
+		//a.modules.BlockTrimmer,
 	)
 
 	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })
