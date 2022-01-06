@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"github.com/streamingfast/bstream/transform"
 
 	"strings"
 
@@ -28,13 +29,12 @@ func NewServer(
 	logger *zap.Logger,
 	authenticator dauth.Authenticator,
 	blocksStores []dstore.Store,
-	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
 	isReady func(context.Context) bool,
 	listenAddr string,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
-	//trimmer firehose.BlockTrimmer,
+	transformRegistry *transform.Registry,
 ) *Server {
 	liveSupport := liveSourceFactory != nil && liveHeadTracker != nil
 	logger.Info("setting up blockstream server (v2)", zap.Bool("live_support", liveSupport))
@@ -44,20 +44,8 @@ func NewServer(
 		liveSourceFactory,
 		liveHeadTracker,
 		tracker,
-		//trimmer,
+		transformRegistry,
 	)
-
-	//// The preprocessing handler must always be applied even when a cursor is used and there is blocks to process
-	//// between the LIB and the Head Block. While the downstream consumer will not necessarly received them, they must
-	//// be pre-processed to ensure undos can be sent back if needed.
-	//blockStreamService.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
-	//	preprocessor, err := filterPreprocessorFactory(req.IncludeFilterExpr, req.ExcludeFilterExpr)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("filter preprocessor factory: %w", err)
-	//	}
-	//
-	//	return preprocessor, nil
-	//})
 
 	firehoseStreamService.SetPostHook(func(ctx context.Context, response *pbfirehose.Response) {
 		//////////////////////////////////////////////////////////////////////

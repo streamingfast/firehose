@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -14,19 +15,25 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var errStopBlockReached = errors.New("stop block reached")
 
 func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
 	var preprocFunc bstream.PreprocessFunc
-	//if s.preprocFactory != nil {
-	//	pp, err := s.preprocFactory(request)
-	//	if err != nil {
-	//		return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
-	//	}
-	//	preprocFunc = pp
-	//}
+	if s.transformRegistry != nil {
+		pp, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+		if err != nil {
+			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
+		}
+		preprocFunc = pp
+	} else {
+		if len(request.Transforms) > 0 {
+			return status.Errorf(codes.Unimplemented, "requested transform are not registered")
+		}
+	}
 
 	var fileSourceOptions []bstream.FileSourceOption
 	if len(s.blocksStores) > 1 {
@@ -125,29 +132,43 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		fObj := obj.(*forkable.ForkableObject)
-		switch v := fObj.Obj.(type) { // use filtered block if passed as object
+		resp := &pbfirehose.Response{
+			Step:   stepToProto(fObj.Step),
+			Cursor: fObj.Cursor().ToOpaque(),
+		}
+
+		obj = fObj.Obj
+		if obj == nil {
+			obj = block
+		}
+
+		switch v := obj.(type) { // use filtered block if passed as object
 		case *bstream.Block:
 			if v != nil {
 				block = v
 			}
+			anyProtocolBlock, err := block.ToAny(true, blockInterceptor)
+			if err != nil {
+				return fmt.Errorf("to any: %w", err)
+			}
+			resp.Block = anyProtocolBlock
+		case proto.Message:
+			// this is handling the transform cases
+			cnt, err := anypb.New(v)
+			if err != nil {
+				return fmt.Errorf("to any: %w", err)
+			}
+			resp.Block = cnt
 		default:
+			// this can be the out
+			return fmt.Errorf("unknown object type %t, cannot marshal to protobuf Any", v)
 		}
 
-		anyProtocolBlock, err := block.ToAny(true, blockInterceptor)
-		if err != nil {
-			return fmt.Errorf("to any: %w", err)
-		}
-
-		resp := &pbfirehose.Response{
-			Block:  anyProtocolBlock,
-			Step:   stepToProto(fObj.Step),
-			Cursor: fObj.Cursor().ToOpaque(),
-		}
 		if s.postHookFunc != nil {
 			s.postHookFunc(ctx, resp)
 		}
 		start := time.Now()
-		err = stream.Send(resp)
+		err := stream.Send(resp)
 		logger.Info("stream sending", zap.Stringer("block", block))
 		if err != nil {
 			logger.Error("STREAM SEND ERR", zap.Stringer("block", block), zap.Error(err))

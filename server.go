@@ -3,6 +3,7 @@ package firehose
 import (
 	"context"
 	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/dstore"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/zap"
@@ -18,10 +19,9 @@ type Server struct {
 	liveSourceFactory bstream.SourceFactory
 	liveHeadTracker   bstream.BlockRefGetter
 	tracker           *bstream.Tracker
-	//preprocFactory    func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error)
-	ready bool
-	//trimmer      BlockTrimmer
-	postHookFunc func(context.Context, *pbfirehose.Response)
+	transformRegistry *transform.Registry
+	ready             bool
+	postHookFunc      func(context.Context, *pbfirehose.Response)
 
 	logger *zap.Logger
 }
@@ -32,7 +32,7 @@ func NewServer(
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
-	//trimmer BlockTrimmer,
+	transformRegistry *transform.Registry,
 ) *Server {
 	if tracker != nil {
 		tracker = tracker.Clone()
@@ -46,14 +46,10 @@ func NewServer(
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
 		tracker:           tracker,
-		//trimmer:           trimmer,
-		logger: logger,
+		transformRegistry: transformRegistry,
+		logger:            logger,
 	}
 }
-
-//func (s *Server) SetPreprocFactory(f PreprocFactory) {
-//	s.preprocFactory = f
-//}
 
 func (s *Server) SetPostHook(f func(ctx context.Context, response *pbfirehose.Response)) {
 	s.postHookFunc = f

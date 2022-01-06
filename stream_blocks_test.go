@@ -27,6 +27,7 @@ func TestLocalBlocks(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	// fake block decoder func to return bstream.Block

@@ -17,6 +17,7 @@ package firehose
 import (
 	"context"
 	"fmt"
+	"github.com/streamingfast/bstream/transform"
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -42,12 +43,12 @@ type Config struct {
 
 type Modules struct {
 	// Required dependencies
-	Authenticator dauth.Authenticator
-	//BlockTrimmer              firehose.BlockTrimmer
+	Authenticator             dauth.Authenticator
 	FilterPreprocessorFactory firehose.FilterPreprocessorFactory
 	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
 	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
 	Tracker                   *bstream.Tracker
+	TransformRegistry         *transform.Registry
 }
 
 type App struct {
@@ -115,13 +116,12 @@ func (a *App) Run() error {
 		a.logger,
 		a.modules.Authenticator,
 		blockStores,
-		a.modules.FilterPreprocessorFactory,
 		a.IsReady,
 		a.config.GRPCListenAddr,
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
-		//a.modules.BlockTrimmer,
+		a.modules.TransformRegistry,
 	)
 
 	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })

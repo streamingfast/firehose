@@ -15,9 +15,6 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
-# Protobuf definitions
-PROTO=${1:-"$ROOT/proto"}
-
 function main() {
   checks
 
@@ -41,7 +38,7 @@ function generate() {
     fi
 
     for file in "$@"; do
-      protoc -I$PROTO \
+      protoc -I$ROOT/proto \
         --go_out=. --go_opt=paths=source_relative \
         --go-grpc_out=. --go-grpc_opt=paths=source_relative,require_unimplemented_servers=false \
          $base$file
@@ -64,7 +61,7 @@ function checks() {
     echo "    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0"
     echo "  popd"
     echo ""
-    echo "If everything is working as expetcted, the command:"
+    echo "If everything is working as expected, the command:"
     echo ""
     echo "  protoc-gen-go --version"
     echo ""
