@@ -29,6 +29,9 @@ func NewServer(
 	logger *zap.Logger,
 	authenticator dauth.Authenticator,
 	blocksStores []dstore.Store,
+	irrBlkIdxStore dstore.Store,
+	writeIrrBlkIdx bool,
+	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
 	isReady func(context.Context) bool,
 	listenAddr string,
 	liveSourceFactory bstream.SourceFactory,
@@ -41,6 +44,8 @@ func NewServer(
 	firehoseStreamService := firehose.NewServer(
 		logger,
 		blocksStores,
+		irrBlkIdxStore,
+		writeIrrBlkIdx,
 		liveSourceFactory,
 		liveHeadTracker,
 		tracker,

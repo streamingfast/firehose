@@ -9,7 +9,6 @@ import (
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/firehose"
-	"github.com/streamingfast/bstream/forkable"
 	"github.com/streamingfast/logging"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/zap"
@@ -35,31 +34,18 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 		}
 	}
 
-	var fileSourceOptions []bstream.FileSourceOption
-	if len(s.blocksStores) > 1 {
-		fileSourceOptions = append(fileSourceOptions, bstream.FileSourceWithSecondaryBlocksStores(s.blocksStores[1:]))
-	}
-
-	fileSourceOptions = append(fileSourceOptions, bstream.FileSourceWithConcurrentPreprocess(StreamBlocksParallelThreads)) //
-
-	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		fs := bstream.NewFileSource(
-			s.blocksStores[0],
-			startBlockNum,
-			StreamBlocksParallelFiles,
-			preprocFunc,
-			h,
-			fileSourceOptions...,
-		)
-		return fs
-	})
-
 	options := []firehose.Option{
 		firehose.WithLogger(s.logger),
 		firehose.WithForkableSteps(stepsFromProto(request.ForkSteps)),
 		firehose.WithLiveHeadTracker(s.liveHeadTracker),
 		firehose.WithTracker(s.tracker),
 		firehose.WithStopBlock(request.StopBlockNum),
+		firehose.WithStreamBlocksParallelFiles(StreamBlocksParallelFiles),
+		firehose.WithPreprocessFunc(preprocFunc),
+	}
+
+	if s.indexStore != nil {
+		options = append(options, firehose.WithIrreversibleBlocksIndex(s.indexStore, s.writeIrrIndex, s.indexBundleSizes))
 	}
 
 	// This is etherum specific
@@ -68,7 +54,7 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	//}
 
 	if request.StartCursor != "" {
-		cur, err := forkable.CursorFromOpaque(request.StartCursor)
+		cur, err := bstream.CursorFromOpaque(request.StartCursor)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "invalid start cursor %q: %s", request.StartCursor, err)
 		}
@@ -77,17 +63,10 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	}
 
 	if s.liveSourceFactory != nil {
-		liveFactory := s.liveSourceFactory
-
-		if preprocFunc != nil {
-			liveFactory = func(h bstream.Handler) bstream.Source {
-				return s.liveSourceFactory(bstream.NewPreprocessor(preprocFunc, h))
-			}
-		}
-		options = append(options, firehose.WithLiveSource(liveFactory))
+		options = append(options, firehose.WithLiveSource(s.liveSourceFactory))
 	}
 
-	fhose := firehose.New(fileSourceFactory, request.StartBlockNum, handler, options...)
+	fhose := firehose.New(s.blocksStores, request.StartBlockNum, handler, options...)
 
 	err := fhose.Run(ctx)
 	logger.Info("firehose process completed", zap.Error(err))
@@ -137,15 +116,21 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 	}*/
 
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
-		fObj := obj.(*forkable.ForkableObject)
-		resp := &pbfirehose.Response{
-			Step:   stepToProto(fObj.Step),
-			Cursor: fObj.Cursor().ToOpaque(),
-		}
+		cursorable := obj.(bstream.Cursorable)
+		cursor := cursorable.Cursor()
 
-		obj = fObj.Obj
+		stepable := obj.(bstream.Stepable)
+		step := stepable.Step()
+
+		wrapped := obj.(bstream.ObjectWrapper)
+		obj = wrapped.WrappedObject()
 		if obj == nil {
 			obj = block
+		}
+
+		resp := &pbfirehose.Response{
+			Step:   stepToProto(step),
+			Cursor: cursor.ToOpaque(),
 		}
 
 		switch v := obj.(type) { // use filtered block if passed as object
@@ -193,25 +178,25 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 	return s.runBlocks(ctx, handlerFunc, request, logger)
 }
 
-func stepToProto(step forkable.StepType) pbfirehose.ForkStep {
+func stepToProto(step bstream.StepType) pbfirehose.ForkStep {
 	// This step mapper absorbs the Redo into a New for our consumesr.
 	switch step {
-	case forkable.StepNew, forkable.StepRedo:
+	case bstream.StepNew, bstream.StepRedo:
 		return pbfirehose.ForkStep_STEP_NEW
-	case forkable.StepUndo:
+	case bstream.StepUndo:
 		return pbfirehose.ForkStep_STEP_UNDO
-	case forkable.StepIrreversible:
+	case bstream.StepIrreversible:
 		return pbfirehose.ForkStep_STEP_IRREVERSIBLE
 	}
 	panic("unsupported step")
 }
 
-func stepsFromProto(steps []pbfirehose.ForkStep) forkable.StepType {
+func stepsFromProto(steps []pbfirehose.ForkStep) bstream.StepType {
 	if len(steps) <= 0 {
-		return forkable.StepNew | forkable.StepRedo | forkable.StepUndo | forkable.StepIrreversible
+		return bstream.StepNew | bstream.StepRedo | bstream.StepUndo | bstream.StepIrreversible
 	}
 
-	var filter forkable.StepType
+	var filter bstream.StepType
 	var containsNew bool
 	var containsUndo bool
 	for _, step := range steps {
@@ -226,20 +211,20 @@ func stepsFromProto(steps []pbfirehose.ForkStep) forkable.StepType {
 
 	// Redo is output into 'new' and has no proto equivalent
 	if containsNew && containsUndo {
-		filter |= forkable.StepRedo
+		filter |= bstream.StepRedo
 	}
 
 	return filter
 }
 
-func stepFromProto(step pbfirehose.ForkStep) forkable.StepType {
+func stepFromProto(step pbfirehose.ForkStep) bstream.StepType {
 	switch step {
 	case pbfirehose.ForkStep_STEP_NEW:
-		return forkable.StepNew
+		return bstream.StepNew
 	case pbfirehose.ForkStep_STEP_UNDO:
-		return forkable.StepUndo
+		return bstream.StepUndo
 	case pbfirehose.ForkStep_STEP_IRREVERSIBLE:
-		return forkable.StepIrreversible
+		return bstream.StepIrreversible
 	}
-	return forkable.StepType(0)
+	return bstream.StepType(0)
 }

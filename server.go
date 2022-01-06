@@ -2,6 +2,7 @@ package firehose
 
 import (
 	"context"
+
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/dstore"
@@ -12,10 +13,14 @@ import (
 type PreprocFactory func(req *pbfirehose.Request) (bstream.PreprocessFunc, error)
 
 var StreamBlocksParallelFiles = 1
-var StreamBlocksParallelThreads = 10
 
 type Server struct {
-	blocksStores      []dstore.Store
+	blocksStores []dstore.Store
+
+	indexStore       dstore.Store
+	writeIrrIndex    bool
+	indexBundleSizes []uint64
+
 	liveSourceFactory bstream.SourceFactory
 	liveHeadTracker   bstream.BlockRefGetter
 	tracker           *bstream.Tracker
@@ -29,6 +34,8 @@ type Server struct {
 func NewServer(
 	logger *zap.Logger,
 	blocksStores []dstore.Store,
+	indexStore dstore.Store,
+	writeIrrIndex bool,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
@@ -45,6 +52,9 @@ func NewServer(
 		blocksStores:      blocksStores,
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
+		writeIrrIndex:     writeIrrIndex,
+		indexStore:        indexStore,
+		indexBundleSizes:  []uint64{10000, 1000, 100}, // hardcoded for now
 		tracker:           tracker,
 		transformRegistry: transformRegistry,
 		logger:            logger,
