@@ -105,9 +105,15 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 			return status.Error(codes.DeadlineExceeded, "source deadline exceeded")
 		}
 
-		var e *firehose.ErrInvalidArg
-		if errors.As(err, &e) {
-			return status.Error(codes.InvalidArgument, e.Error())
+		var errInvalidArg *firehose.ErrInvalidArg
+		if errors.As(err, &errInvalidArg) {
+			return status.Error(codes.InvalidArgument, errInvalidArg.Error())
+		}
+
+		var errSendBlock *ErrSendBlock
+		if errors.As(err, &errSendBlock) {
+			logger.Info("unable to send block probably due to client disconnecting", zap.Error(errSendBlock.inner))
+			return status.Error(codes.Unavailable, errSendBlock.inner.Error())
 		}
 
 		logger.Info("unexpected stream of blocks termination", zap.Error(err))
@@ -169,12 +175,17 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 		}
 		start := time.Now()
 		err := stream.Send(resp)
-		logger.Info("stream sending", zap.Stringer("block", block))
 		if err != nil {
-			logger.Error("STREAM SEND ERR", zap.Stringer("block", block), zap.Error(err))
-			return err
+			logger.Info("stream send error", zap.Stringer("block", block), zap.Error(err))
+			return NewErrSendBlock(err)
 		}
-		logger.Info("stream sent block", zap.Stringer("block", block), zap.Duration("duration", time.Since(start)))
+
+		level := zap.DebugLevel
+		if block.Number%200 == 0 {
+			level = zap.InfoLevel
+		}
+
+		logger.Check(level, "stream sent block").Write(zap.Stringer("block", block), zap.Duration("duration", time.Since(start)))
 
 		return nil
 	})
