@@ -5,14 +5,14 @@ go 1.15
 require (
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
-	github.com/streamingfast/bstream v0.0.2-0.20220106162949-6b5255130e51
+	github.com/streamingfast/bstream v0.0.2-0.20220126182630-2aa47b0c84fe
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
 	github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b
 	github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
 	github.com/streamingfast/dstore v0.1.1-0.20211012134319-16e840827e38
 	github.com/streamingfast/logging v0.0.0-20210908162127-bdc5856d5341
-	github.com/streamingfast/pbgo v0.0.6-0.20211209212750-753f0acb6553
+	github.com/streamingfast/pbgo v0.0.6-0.20220104194237-6534a2f6320b
 	github.com/streamingfast/shutter v1.5.0
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/atomic v1.7.0

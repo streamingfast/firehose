@@ -2,9 +2,10 @@ package firehose
 
 import (
 	"context"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"strings"
 	"testing"
+
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/streamingfast/bstream"
@@ -18,12 +19,15 @@ import (
 func TestLocalBlocks(t *testing.T) {
 
 	store := dstore.NewMockStore(nil)
+	idxStore := dstore.NewMockStore(nil)
 	blocksStores := []dstore.Store{store}
 	logger := zap.NewNop()
 
 	s := NewServer(
 		logger,
 		blocksStores,
+		idxStore,
+		true,
 		nil,
 		nil,
 		nil,
