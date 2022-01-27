@@ -143,6 +143,7 @@ func TestFullFlow(t *testing.T) {
 				[]dstore.Store{bs},
 				irrStore,
 				false,
+				[]uint64{10000, 1000, 100},
 				nil,
 				nil,
 				tracker,

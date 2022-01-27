@@ -36,6 +36,7 @@ func NewServer(
 	blocksStores []dstore.Store,
 	indexStore dstore.Store,
 	writeIrrIndex bool,
+	indexBundleSizes []uint64,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
@@ -54,7 +55,7 @@ func NewServer(
 		liveHeadTracker:   liveHeadTracker,
 		writeIrrIndex:     writeIrrIndex,
 		indexStore:        indexStore,
-		indexBundleSizes:  []uint64{10000, 1000, 100}, // hardcoded for now
+		indexBundleSizes:  indexBundleSizes,
 		tracker:           tracker,
 		transformRegistry: transformRegistry,
 		logger:            logger,

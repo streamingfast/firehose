@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+
 	"github.com/streamingfast/bstream/transform"
 
 	"strings"
@@ -31,6 +32,7 @@ func NewServer(
 	blocksStores []dstore.Store,
 	irrBlkIdxStore dstore.Store,
 	writeIrrBlkIdx bool,
+	irrBlkIdxBundleSizes []uint64,
 	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
 	isReady func(context.Context) bool,
 	listenAddr string,
@@ -46,6 +48,7 @@ func NewServer(
 		blocksStores,
 		irrBlkIdxStore,
 		writeIrrBlkIdx,
+		irrBlkIdxBundleSizes,
 		liveSourceFactory,
 		liveHeadTracker,
 		tracker,

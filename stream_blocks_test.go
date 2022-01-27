@@ -28,6 +28,7 @@ func TestLocalBlocks(t *testing.T) {
 		blocksStores,
 		idxStore,
 		true,
+		[]uint64{10000, 1000, 100},
 		nil,
 		nil,
 		nil,

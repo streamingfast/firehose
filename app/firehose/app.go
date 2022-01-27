@@ -17,8 +17,9 @@ package firehose
 import (
 	"context"
 	"fmt"
-	"github.com/streamingfast/bstream/transform"
 	"time"
+
+	"github.com/streamingfast/bstream/transform"
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/blockstream"
@@ -37,6 +38,7 @@ type Config struct {
 	BlockStoreURLs                  []string // Blocks store
 	IrreversibleBlocksIndexStoreURL string
 	WriteIrreversibleBlocksIndex    bool
+	IrreversibleBlocksBundleSizes   []uint64
 	BlockStreamAddr                 string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
 	GRPCListenAddr                  string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod         time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
@@ -129,6 +131,7 @@ func (a *App) Run() error {
 		blockStores,
 		store,
 		a.config.WriteIrreversibleBlocksIndex,
+		a.config.IrreversibleBlocksBundleSizes,
 		a.modules.FilterPreprocessorFactory,
 		a.IsReady,
 		a.config.GRPCListenAddr,
