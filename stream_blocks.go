@@ -35,7 +35,7 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	}
 
 	options := []firehose.Option{
-		firehose.WithLogger(s.logger),
+		firehose.WithLogger(logging.Logger(ctx, s.logger)),
 		firehose.WithForkableSteps(stepsFromProto(request.ForkSteps)),
 		firehose.WithLiveHeadTracker(s.liveHeadTracker),
 		firehose.WithTracker(s.tracker),
