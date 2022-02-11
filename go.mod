@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
-	github.com/streamingfast/bstream v0.0.2-0.20220210135451-43aa5bfb9274
+	github.com/streamingfast/bstream v0.0.2-0.20220211203037-c8c9a009bd74
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
 	github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b
 	github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817

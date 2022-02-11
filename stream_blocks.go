@@ -22,12 +22,14 @@ var errStopBlockReached = errors.New("stop block reached")
 
 func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
 	var preprocFunc bstream.PreprocessFunc
+	var blockIndexProvider bstream.BlockIndexProvider
 	if s.transformRegistry != nil {
-		pp, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+		pp, bip, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
 		if err != nil {
 			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
 		}
 		preprocFunc = pp
+		blockIndexProvider = bip
 	} else {
 		if len(request.Transforms) > 0 {
 			return status.Errorf(codes.Unimplemented, "requested transform are not registered")
@@ -46,6 +48,9 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 
 	if s.indexStore != nil {
 		options = append(options, firehose.WithIrreversibleBlocksIndex(s.indexStore, s.writeIrrIndex, s.indexBundleSizes))
+		if blockIndexProvider != nil {
+			options = append(options, firehose.WithBlockIndexProvider(blockIndexProvider))
+		}
 	}
 
 	// This is etherum specific
