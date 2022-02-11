@@ -348,6 +348,8 @@ github.com/streamingfast/bstream v0.0.2-0.20220210135451-43aa5bfb9274 h1:IHKa8G8
 github.com/streamingfast/bstream v0.0.2-0.20220210135451-43aa5bfb9274/go.mod h1:Ktj9YKK643GPmd6Lugf5EMVciWXFgzRoVPK5JRnPgkU=
 github.com/streamingfast/bstream v0.0.2-0.20220211162847-fdfcc656111f h1:JLfndsMyPmUUh7OvcV8XgXove8a26iPCiJQhfopmm3s=
 github.com/streamingfast/bstream v0.0.2-0.20220211162847-fdfcc656111f/go.mod h1:Ktj9YKK643GPmd6Lugf5EMVciWXFgzRoVPK5JRnPgkU=
+github.com/streamingfast/bstream v0.0.2-0.20220211203037-c8c9a009bd74 h1:GebahyNVLZRV3PiXSHmmJV2iXOOXgWrzjmRfLMHtxZ4=
+github.com/streamingfast/bstream v0.0.2-0.20220211203037-c8c9a009bd74/go.mod h1:Ktj9YKK643GPmd6Lugf5EMVciWXFgzRoVPK5JRnPgkU=
 github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc/go.mod h1:wwjRBEA7vZZ5kfy3I4LB5NJhFJWN2gaYgpBEmOnDwD8=
 github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1 h1:jZrytO3UXSEQEG1pTHDEfnLkc5JK5KEY7urxhV7bvSw=
 github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1/go.mod h1:FIYpVqt+ICVuNBoOH3ZIicIctpVoCq3393+RpfXsPEM=
