@@ -105,13 +105,8 @@ func TestFullFlow(t *testing.T) {
 				{6, "6a", stepIrr},
 				{102, "102a", stepNew},
 				{103, "103a", stepNew},
-				{100, "100a", stepIrr},
 			},
 		},
-		//		{
-		//			"scenario 3 -- cursor, no irrIdx",
-		//			},
-		//		},
 	}
 
 	for _, c := range tests {

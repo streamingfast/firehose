@@ -48,7 +48,6 @@ func TestLocalBlocks(t *testing.T) {
 		bstream.TestJSONBlockWithLIBNum("00000002a", "00000001a", 1),
 		bstream.TestJSONBlockWithLIBNum("00000003a", "00000002a", 2),
 		bstream.TestJSONBlockWithLIBNum("00000004a", "00000003a", 3), // last one closes on endblock
-		bstream.TestJSONBlockWithLIBNum("00000005a", "00000004a", 4), // last irreversible closes on endblock
 	}, "\n")
 
 	store.SetFile("0000000000", []byte(blocks))
@@ -93,15 +92,6 @@ func TestLocalBlocks(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, uint64(4), b.Number)
 	assert.Equal(t, blk.Step, pbfirehose.ForkStep_STEP_NEW)
-
-	// ----
-	blk, err = localClient.Recv()
-	require.NoError(t, err)
-	b = &pbbstream.Block{}
-	err = proto.Unmarshal(blk.Block.Value, b)
-	require.NoError(t, err)
-	assert.Equal(t, uint64(3), b.Number)
-	assert.Equal(t, blk.Step, pbfirehose.ForkStep_STEP_IRREVERSIBLE)
 
 	// ----
 	blk, err = localClient.Recv()
