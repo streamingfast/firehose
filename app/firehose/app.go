@@ -27,7 +27,6 @@ import (
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
-	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/grpc"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/atomic"
@@ -47,12 +46,11 @@ type Config struct {
 
 type Modules struct {
 	// Required dependencies
-	Authenticator             dauth.Authenticator
-	FilterPreprocessorFactory firehose.FilterPreprocessorFactory
-	HeadTimeDriftMetric       *dmetrics.HeadTimeDrift
-	HeadBlockNumberMetric     *dmetrics.HeadBlockNum
-	Tracker                   *bstream.Tracker
-	TransformRegistry         *transform.Registry
+	Authenticator         dauth.Authenticator
+	HeadTimeDriftMetric   *dmetrics.HeadTimeDrift
+	HeadBlockNumberMetric *dmetrics.HeadBlockNum
+	Tracker               *bstream.Tracker
+	TransformRegistry     *transform.Registry
 }
 
 type App struct {
@@ -132,7 +130,6 @@ func (a *App) Run() error {
 		store,
 		a.config.WriteIrreversibleBlocksIndex,
 		a.config.IrreversibleBlocksBundleSizes,
-		a.modules.FilterPreprocessorFactory,
 		a.IsReady,
 		a.config.GRPCListenAddr,
 		serverLiveSourceFactory,

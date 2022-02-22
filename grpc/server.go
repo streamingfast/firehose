@@ -33,7 +33,6 @@ func NewServer(
 	irrBlkIdxStore dstore.Store,
 	writeIrrBlkIdx bool,
 	irrBlkIdxBundleSizes []uint64,
-	filterPreprocessorFactory firehose.FilterPreprocessorFactory,
 	isReady func(context.Context) bool,
 	listenAddr string,
 	liveSourceFactory bstream.SourceFactory,
