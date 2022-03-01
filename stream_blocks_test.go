@@ -7,13 +7,13 @@ import (
 
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dstore"
 	pbbstream "github.com/streamingfast/pbgo/sf/bstream/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestLocalBlocks(t *testing.T) {

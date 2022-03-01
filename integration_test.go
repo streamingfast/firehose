@@ -7,15 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dstore"
 	pbbstream "github.com/streamingfast/pbgo/sf/bstream/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestFullFlow(t *testing.T) {

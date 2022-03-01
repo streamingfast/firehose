@@ -1,2 +1,2 @@
-generate.sh - Tue  4 Jan 2022 14:25:24 EST - julien
-streamingfast/firehose revision: b6f9fe8204747f7299c6550318592c499fc8c42c
+generate.sh - Tue Mar  1 11:58:21 EST 2022 - maoueh
+streamingfast/firehose revision: 1a11f3a913467780af7915ccffb68b9b625b6b8c
