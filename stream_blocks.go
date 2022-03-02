@@ -18,8 +18,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var errStopBlockReached = errors.New("stop block reached")
-
 func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
 	var preprocFunc bstream.PreprocessFunc
 	var blockIndexProvider bstream.BlockIndexProvider
@@ -28,11 +26,12 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 		if err != nil {
 			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
 		}
+
 		preprocFunc = pp
 		blockIndexProvider = bip
 	} else {
 		if len(request.Transforms) > 0 {
-			return status.Errorf(codes.Unimplemented, "requested transform are not registered")
+			return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 		}
 	}
 
