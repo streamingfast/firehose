@@ -36,7 +36,6 @@ import (
 type Config struct {
 	BlockStoreURLs                  []string // Blocks store
 	IrreversibleBlocksIndexStoreURL string
-	WriteIrreversibleBlocksIndex    bool
 	IrreversibleBlocksBundleSizes   []uint64
 	BlockStreamAddr                 string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
 	GRPCListenAddr                  string        // gRPC address where this app will listen to
@@ -128,7 +127,6 @@ func (a *App) Run() error {
 		a.modules.Authenticator,
 		blockStores,
 		store,
-		a.config.WriteIrreversibleBlocksIndex,
 		a.config.IrreversibleBlocksBundleSizes,
 		a.IsReady,
 		a.config.GRPCListenAddr,

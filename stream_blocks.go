@@ -46,7 +46,7 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	}
 
 	if s.indexStore != nil {
-		options = append(options, firehose.WithIrreversibleBlocksIndex(s.indexStore, s.writeIrrIndex, s.indexBundleSizes))
+		options = append(options, firehose.WithIrreversibleBlocksIndex(s.indexStore, s.indexBundleSizes))
 		if blockIndexProvider != nil {
 			options = append(options, firehose.WithBlockIndexProvider(blockIndexProvider))
 		}

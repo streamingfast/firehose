@@ -18,7 +18,6 @@ type Server struct {
 	blocksStores []dstore.Store
 
 	indexStore       dstore.Store
-	writeIrrIndex    bool
 	indexBundleSizes []uint64
 
 	liveSourceFactory bstream.SourceFactory
@@ -35,7 +34,6 @@ func NewServer(
 	logger *zap.Logger,
 	blocksStores []dstore.Store,
 	indexStore dstore.Store,
-	writeIrrIndex bool,
 	indexBundleSizes []uint64,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
@@ -53,7 +51,6 @@ func NewServer(
 		blocksStores:      blocksStores,
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
-		writeIrrIndex:     writeIrrIndex,
 		indexStore:        indexStore,
 		indexBundleSizes:  indexBundleSizes,
 		tracker:           tracker,
