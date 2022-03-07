@@ -9,7 +9,7 @@ require (
 	github.com/streamingfast/dmetering v0.0.0-20220301165106-a642bb6a21bd
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
 	github.com/streamingfast/dstore v0.1.1-0.20220203133825-30eb2f9c5cd3
-	github.com/streamingfast/logging v0.0.0-20220222131651-12c3943aac2e
+	github.com/streamingfast/logging v0.0.0-20220304214715-bc750a74b424
 	github.com/streamingfast/pbgo v0.0.6-0.20220228185940-1bbaafec7d8a
 	github.com/streamingfast/shutter v1.5.0
 	github.com/stretchr/testify v1.7.0

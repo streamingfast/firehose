@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	logging.TestingOverride()
+	logging.InstantiateLoggers()
 
 	bstream.GetBlockReaderFactory = bstream.TestBlockReaderFactory
 }
