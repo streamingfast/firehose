@@ -3,12 +3,12 @@ module github.com/streamingfast/firehose
 go 1.15
 
 require (
-	github.com/streamingfast/bstream v0.0.2-0.20220303152911-1db2bc621583
+	github.com/streamingfast/bstream v0.0.2-0.20220311190556-572f5584dd56
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
 	github.com/streamingfast/dgrpc v0.0.0-20220301153539-536adf71b594
 	github.com/streamingfast/dmetering v0.0.0-20220301165106-a642bb6a21bd
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
-	github.com/streamingfast/dstore v0.1.1-0.20220203133825-30eb2f9c5cd3
+	github.com/streamingfast/dstore v0.1.1-0.20220304164644-696f9c5fc231
 	github.com/streamingfast/logging v0.0.0-20220304214715-bc750a74b424
 	github.com/streamingfast/pbgo v0.0.6-0.20220228185940-1bbaafec7d8a
 	github.com/streamingfast/shutter v1.5.0

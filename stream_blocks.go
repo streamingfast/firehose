@@ -21,11 +21,13 @@ import (
 func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
 	var preprocFunc bstream.PreprocessFunc
 	var blockIndexProvider bstream.BlockIndexProvider
+	var zapFields []zap.Field
 	if s.transformRegistry != nil {
-		pp, bip, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+		pp, bip, regDesc, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
 		if err != nil {
 			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
 		}
+		zapFields = append(zapFields, zap.String("transforms", regDesc))
 
 		preprocFunc = pp
 		blockIndexProvider = bip
@@ -34,6 +36,9 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 			return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 		}
 	}
+
+	zapFields = append(zapFields, zap.Reflect("req", request))
+	s.logger.Info("processing incoming blocks request", zapFields...)
 
 	options := []firehose.Option{
 		firehose.WithLogger(logging.Logger(ctx, s.logger)),
@@ -111,7 +116,6 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_BlocksServer) error {
 	ctx := stream.Context()
 	logger := logging.Logger(ctx, s.logger)
-	logger.Info("incoming blocks request", zap.Reflect("req", request))
 
 	var blockInterceptor func(blk interface{}) interface{}
 	// TODO: move this as a transforms
