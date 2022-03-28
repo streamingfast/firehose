@@ -18,30 +18,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
-	var preprocFunc bstream.PreprocessFunc
-	var blockIndexProvider bstream.BlockIndexProvider
-	var zapFields []zap.Field
-	if s.transformRegistry != nil {
-		pp, bip, regDesc, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
-		}
-		zapFields = append(zapFields, zap.String("transforms", regDesc))
+func (s Server) runBlocks(ctx context.Context, preprocFunc bstream.PreprocessFunc, handler bstream.Handler, blockIndexProvider bstream.BlockIndexProvider, request *pbfirehose.Request, logger *zap.Logger) error {
 
-		preprocFunc = pp
-		blockIndexProvider = bip
-	} else {
-		if len(request.Transforms) > 0 {
-			return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
-		}
-	}
-
-	zapFields = append(zapFields, zap.Reflect("req", request))
-	s.logger.Info("processing incoming blocks request", zapFields...)
+	logger.Info("processing incoming blocks request", zap.Reflect("req", request))
 
 	options := []firehose.Option{
-		firehose.WithLogger(logging.Logger(ctx, s.logger)),
+		firehose.WithLogger(logging.Logger(ctx, logger)),
 		firehose.WithForkableSteps(stepsFromProto(request.ForkSteps)),
 		firehose.WithLiveHeadTracker(s.liveHeadTracker),
 		firehose.WithTracker(s.tracker),
@@ -56,11 +38,6 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 			options = append(options, firehose.WithBlockIndexProvider(blockIndexProvider))
 		}
 	}
-
-	// This is etherum specific
-	//if request.Confirmations != 0 {
-	//	options = append(options, firehose.WithConfirmations(request.Confirmations))
-	//}
 
 	if request.StartCursor != "" {
 		cur, err := bstream.CursorFromOpaque(request.StartCursor)
@@ -118,11 +95,6 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 	logger := logging.Logger(ctx, s.logger)
 
 	var blockInterceptor func(blk interface{}) interface{}
-	// TODO: move this as a transforms
-	/*if s.trimmer != nil {
-		blockInterceptor = func(blk interface{}) interface{} { return s.trimmer.Trim(blk, request.Details) }
-	}*/
-
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		cursorable := obj.(bstream.Cursorable)
 		cursor := cursorable.Cursor()
@@ -183,7 +155,53 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 		return nil
 	})
 
-	return s.runBlocks(ctx, handlerFunc, request, logger)
+	var preprocFunc bstream.PreprocessFunc
+	var blockIndexProvider bstream.BlockIndexProvider
+	if s.transformRegistry != nil {
+		pp, bip, passthroughTr, regDesc, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+		if err != nil {
+			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
+		}
+
+		if passthroughTr != nil {
+			logger.Info("running passthrough")
+			passthroughTr.Run(ctx, request, func(cursor *bstream.Cursor, message *anypb.Any) error {
+				resp := &pbfirehose.Response{
+					Step:   stepToProto(cursor.Step),
+					Cursor: cursor.ToOpaque(),
+					Block:  message,
+				}
+				if s.postHookFunc != nil {
+					s.postHookFunc(ctx, resp)
+				}
+				start := time.Now()
+				var blocknum uint64
+				if cursor != nil {
+					blocknum = cursor.Block.Num()
+				}
+				err := stream.Send(resp)
+				if err != nil {
+					logger.Info("stream send error from transform", zap.Uint64("blocknum", blocknum), zap.Error(err))
+					return NewErrSendBlock(err)
+				}
+
+				level := zap.DebugLevel
+				if blocknum%200 == 0 {
+					level = zap.InfoLevel
+				}
+				logger.Check(level, "stream sent message from transform").Write(zap.Uint64("blocknum", blocknum), zap.Duration("duration", time.Since(start)))
+				return nil
+			})
+		}
+
+		logger = logger.With(zap.String("transforms", regDesc))
+		preprocFunc = pp
+		blockIndexProvider = bip
+	} else if len(request.Transforms) > 0 {
+		return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
+	}
+
+	return s.runBlocks(ctx, preprocFunc, handlerFunc, blockIndexProvider, request, logger)
 }
 
 func stepToProto(step bstream.StepType) pbfirehose.ForkStep {
