@@ -20,10 +20,10 @@ import (
 
 var errStopBlockReached = errors.New("stop block reached")
 
-func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
+func (i *InstanceFactory) New(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) bstream.Source {
 	var preprocFunc bstream.PreprocessFunc
-	if s.transformRegistry != nil {
-		pp, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+	if i.transformRegistry != nil {
+		pp, err := i.transformRegistry.BuildFromTransforms(request.Transforms)
 		if err != nil {
 			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
 		}
@@ -35,10 +35,10 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	}
 
 	options := []firehose.Option{
-		firehose.WithLogger(logging.Logger(ctx, s.logger)),
+		firehose.WithLogger(logging.Logger(ctx, logger)),
 		firehose.WithForkableSteps(stepsFromProto(request.ForkSteps)),
-		firehose.WithLiveHeadTracker(s.liveHeadTracker),
-		firehose.WithTracker(s.tracker),
+		firehose.WithLiveHeadTracker(i.liveHeadTracker),
+		firehose.WithTracker(i.tracker),
 		firehose.WithStopBlock(request.StopBlockNum),
 		firehose.WithStreamBlocksParallelFiles(StreamBlocksParallelFiles),
 		firehose.WithPreprocessFunc(preprocFunc),
@@ -56,19 +56,28 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 	if request.StartCursor != "" {
 		cur, err := bstream.CursorFromOpaque(request.StartCursor)
 		if err != nil {
+			// TODO: don't return a grpc error here
 			return status.Errorf(codes.InvalidArgument, "invalid start cursor %q: %s", request.StartCursor, err)
 		}
 
 		options = append(options, firehose.WithCursor(cur))
 	}
 
-	if s.liveSourceFactory != nil {
-		options = append(options, firehose.WithLiveSource(s.liveSourceFactory))
+	if i.liveSourceFactory != nil {
+		options = append(options, firehose.WithLiveSource(i.liveSourceFactory))
 	}
 
-	fhose := firehose.New(s.blocksStores, request.StartBlockNum, handler, options...)
+	fhose := firehose.New(i.blocksStores, request.StartBlockNum, handler, options...)
+
+	return fhose
+}
+
+func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request *pbfirehose.Request, logger *zap.Logger) error {
+
+	fhose := s.InstanceFactory(ctx, handler, request, logger)
 
 	err := fhose.Run(ctx)
+
 	logger.Info("firehose process completed", zap.Error(err))
 	if err != nil {
 		if errors.Is(err, firehose.ErrStopBlockReached) {
@@ -101,7 +110,6 @@ func (s Server) runBlocks(ctx context.Context, handler bstream.Handler, request 
 
 	logger.Error("source is not expected to terminate gracefully, should stop at block or continue forever")
 	return status.Error(codes.Internal, "unexpected stream completion")
-
 }
 
 func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_BlocksServer) error {

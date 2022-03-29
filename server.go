@@ -14,26 +14,18 @@ type PreprocFactory func(req *pbfirehose.Request) (bstream.PreprocessFunc, error
 
 var StreamBlocksParallelFiles = 1
 
-type Server struct {
-	blocksStores []dstore.Store
-
-	indexStore       dstore.Store
-	writeIrrIndex    bool
-	indexBundleSizes []uint64
-
+type InstanceFactory struct {
+	blocksStores      []dstore.Store
+	indexStore        dstore.Store
+	writeIrrIndex     bool
+	indexBundleSizes  []uint64
 	liveSourceFactory bstream.SourceFactory
 	liveHeadTracker   bstream.BlockRefGetter
 	tracker           *bstream.Tracker
 	transformRegistry *transform.Registry
-	ready             bool
-	postHookFunc      func(context.Context, *pbfirehose.Response)
-
-	logger *zap.Logger
 }
 
-func NewServer(
-	logger *zap.Logger,
-	blocksStores []dstore.Store,
+func NewInstanceFactory(blocksStores []dstore.Store,
 	indexStore dstore.Store,
 	writeIrrIndex bool,
 	indexBundleSizes []uint64,
@@ -41,15 +33,14 @@ func NewServer(
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
 	transformRegistry *transform.Registry,
-) *Server {
+) *InstanceFactory {
 	if tracker != nil {
 		tracker = tracker.Clone()
 		if liveHeadTracker != nil {
 			tracker.AddGetter(bstream.BlockStreamHeadTarget, liveHeadTracker)
 		}
 	}
-
-	return &Server{
+	return &InstanceFactory{
 		blocksStores:      blocksStores,
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
@@ -58,7 +49,26 @@ func NewServer(
 		indexBundleSizes:  indexBundleSizes,
 		tracker:           tracker,
 		transformRegistry: transformRegistry,
-		logger:            logger,
+	}
+}
+
+type Server struct {
+	instanceFactory *InstanceFactory
+
+	ready        bool
+	postHookFunc func(context.Context, *pbfirehose.Response)
+
+	logger *zap.Logger
+}
+
+func NewServer(
+	logger *zap.Logger,
+	instanceFactory *InstanceFactory,
+) *Server {
+
+	return &Server{
+		instanceFactory: instanceFactory,
+		logger:          logger,
 	}
 }
 
