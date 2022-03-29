@@ -165,7 +165,8 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 
 		if passthroughTr != nil {
 			logger.Info("running passthrough")
-			passthroughTr.Run(ctx, request, func(cursor *bstream.Cursor, message *anypb.Any) error {
+
+			outputFunc := func(cursor *bstream.Cursor, message *anypb.Any) error {
 				resp := &pbfirehose.Response{
 					Step:   stepToProto(cursor.Step),
 					Cursor: cursor.ToOpaque(),
@@ -191,7 +192,9 @@ func (s Server) Blocks(request *pbfirehose.Request, stream pbfirehose.Stream_Blo
 				}
 				logger.Check(level, "stream sent message from transform").Write(zap.Uint64("blocknum", blocknum), zap.Duration("duration", time.Since(start)))
 				return nil
-			})
+			}
+
+			return passthroughTr.Run(ctx, request, outputFunc)
 		}
 
 		logger = logger.With(zap.String("transforms", regDesc))
