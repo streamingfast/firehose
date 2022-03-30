@@ -92,19 +92,23 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		if passthroughTr != nil {
 			logger.Info("running passthrough")
 			outputFunc := func(cursor *bstream.Cursor, message *anypb.Any) error {
+				var blocknum uint64
+				var opaqueCursor string
+				var forkStep pbfirehose.ForkStep
+				if cursor != nil {
+					blocknum = cursor.Block.Num()
+					opaqueCursor = cursor.ToOpaque()
+					forkStep = stepToProto(cursor.Step)
+				}
 				resp := &pbfirehose.Response{
-					Step:   stepToProto(cursor.Step),
-					Cursor: cursor.ToOpaque(),
+					Step:   forkStep,
+					Cursor: opaqueCursor,
 					Block:  message,
 				}
 				if s.postHookFunc != nil {
 					s.postHookFunc(ctx, resp)
 				}
 				start := time.Now()
-				var blocknum uint64
-				if cursor != nil {
-					blocknum = cursor.Block.Num()
-				}
 				err := streamSrv.Send(resp)
 				if err != nil {
 					logger.Info("stream send error from transform", zap.Uint64("blocknum", blocknum), zap.Error(err))
