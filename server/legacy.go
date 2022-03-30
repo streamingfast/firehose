@@ -1,4 +1,4 @@
-package firehose
+package server
 
 import (
 	pbbstream "github.com/streamingfast/firehose/pb/dfuse/bstream/v1"

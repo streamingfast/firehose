@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"github.com/streamingfast/bstream/transform"
+	"github.com/streamingfast/firehose"
+	"github.com/streamingfast/firehose/server"
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/blockstream"
@@ -27,7 +29,6 @@ import (
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
-	"github.com/streamingfast/firehose/grpc"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -110,7 +111,7 @@ func (a *App) Run() error {
 
 	if withLive {
 		var err error
-		subscriptionHub, err = a.newSubscriptionHub(appCtx, blockStores)
+		subscriptionHub, err = a.newSubscriptionHub(blockStores)
 		if err != nil {
 			return fmt.Errorf("setting up subscription hub: %w", err)
 		}
@@ -122,25 +123,45 @@ func (a *App) Run() error {
 	}
 
 	a.logger.Info("creating gRPC server", zap.Bool("live_support", withLive))
-	server := grpc.NewServer(
-		a.logger,
-		a.modules.Authenticator,
+
+	streamFactory := firehose.NewStreamFactory(
 		blockStores,
 		store,
 		a.config.IrreversibleBlocksBundleSizes,
-		a.IsReady,
-		a.config.GRPCListenAddr,
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
 		a.modules.TransformRegistry,
 	)
 
+	server := server.New(
+		a.modules.TransformRegistry,
+		streamFactory,
+		a.logger,
+		a.modules.Authenticator,
+		a.IsReady,
+		a.config.GRPCListenAddr,
+	)
 	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })
 	server.OnTerminated(a.Shutdown)
 
 	if withLive {
-		go subscriptionHub.Launch()
+		// get subscriptionHub  StartBlock   server.modules.tracker appCtx
+		var start uint64
+		a.logger.Info("retrieving live start block")
+		for retries := 0; ; retries++ {
+			lib, err := a.modules.Tracker.Get(appCtx, bstream.BlockStreamLIBTarget)
+			if err != nil {
+				if retries%5 == 4 {
+					a.logger.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
+				}
+				time.Sleep(time.Second)
+				continue
+			}
+			start = lib.Num()
+			break
+		}
+		go subscriptionHub.LaunchAt(start)
 	}
 
 	go server.Launch()
@@ -157,21 +178,7 @@ func (a *App) Run() error {
 	return nil
 }
 
-func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store) (*hub.SubscriptionHub, error) {
-	var start uint64
-	a.logger.Info("retrieving live start block")
-	for retries := 0; ; retries++ {
-		lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
-		if err != nil {
-			if retries%5 == 4 {
-				a.logger.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
-			}
-			time.Sleep(time.Second)
-			continue
-		}
-		start = lib.Num()
-		break
-	}
+func (a *App) newSubscriptionHub(blockStores []dstore.Store) (*hub.SubscriptionHub, error) {
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		return blockstream.NewSource(
@@ -205,7 +212,7 @@ func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store
 	go tailManager.Launch()
 
 	return hub.NewSubscriptionHub(
-		start,
+		0, // we override this later with LaunchAt
 		buffer,
 		tailManager.TailLock,
 		fileSourceFactory,

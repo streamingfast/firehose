@@ -1,17 +1,14 @@
-package grpc
+package server
 
 import (
 	"context"
 
-	"github.com/streamingfast/bstream/transform"
-
 	"strings"
 
-	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/transform"
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dmetering"
-	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
 	pbbstream "github.com/streamingfast/firehose/pb/dfuse/bstream/v1"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
@@ -21,38 +18,27 @@ import (
 )
 
 type Server struct {
+	streamFactory     *firehose.StreamFactory
+	transformRegistry *transform.Registry
+
+	ready        bool
+	postHookFunc func(context.Context, *pbfirehose.Response)
+
 	*dgrpc.Server
 	listenAddr string
 	logger     *zap.Logger
 }
 
-func NewServer(
+func New(
+	transformRegistry *transform.Registry,
+	streamFactory *firehose.StreamFactory,
 	logger *zap.Logger,
 	authenticator dauth.Authenticator,
-	blocksStores []dstore.Store,
-	irrBlkIdxStore dstore.Store,
-	irrBlkIdxBundleSizes []uint64,
 	isReady func(context.Context) bool,
 	listenAddr string,
-	liveSourceFactory bstream.SourceFactory,
-	liveHeadTracker bstream.BlockRefGetter,
-	tracker *bstream.Tracker,
-	transformRegistry *transform.Registry,
 ) *Server {
-	liveSupport := liveSourceFactory != nil && liveHeadTracker != nil
-	logger.Info("setting up blockstream server (v2)", zap.Bool("live_support", liveSupport))
-	firehoseStreamService := firehose.NewServer(
-		logger,
-		blocksStores,
-		irrBlkIdxStore,
-		irrBlkIdxBundleSizes,
-		liveSourceFactory,
-		liveHeadTracker,
-		tracker,
-		transformRegistry,
-	)
 
-	firehoseStreamService.SetPostHook(func(ctx context.Context, response *pbfirehose.Response) {
+	postHookFunc := (func(ctx context.Context, response *pbfirehose.Response) {
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
 			Source:      "firehose",
@@ -78,24 +64,37 @@ func NewServer(
 
 	grpcServer := dgrpc.NewServer2(options...)
 
+	s := &Server{
+		Server:            grpcServer,
+		transformRegistry: transformRegistry,
+		streamFactory:     streamFactory,
+		listenAddr:        strings.ReplaceAll(listenAddr, "*", ""),
+		postHookFunc:      postHookFunc,
+		logger:            logger,
+	}
+
 	logger.Info("registering grpc services")
 	grpcServer.RegisterService(func(gs *grpc.Server) {
-		pbfirehose.RegisterStreamServer(gs, firehoseStreamService)
+		pbfirehose.RegisterStreamServer(gs, s)
 
 		// Legacy support the old BlockStreamV2 api
-		legacyBstreamV2Proxy := firehose.NewLegacyBstreamV2Proxy(firehoseStreamService)
+		legacyBstreamV2Proxy := NewLegacyBstreamV2Proxy(s)
 		pbbstream.RegisterBlockStreamV2Server(gs, legacyBstreamV2Proxy)
 	})
 
-	return &Server{
-		Server:     grpcServer,
-		listenAddr: strings.ReplaceAll(listenAddr, "*", ""),
-		logger:     logger,
-	}
+	return s
 }
 
 func (s *Server) Launch() {
 	s.Server.Launch(s.listenAddr)
+}
+
+func (s *Server) SetReady() {
+	s.ready = true
+}
+
+func (s *Server) IsReady() bool {
+	return s.ready
 }
 
 func createHealthCheck(isReady func(ctx context.Context) bool) dgrpc.HealthCheck {
