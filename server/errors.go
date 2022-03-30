@@ -1,12 +1,8 @@
-package firehose
+package server
 
 import (
 	"fmt"
-
-	"github.com/streamingfast/bstream"
 )
-
-type FilterPreprocessorFactory func(includeExpr string, excludeExpr string) (bstream.PreprocessFunc, error)
 
 type ErrSendBlock struct {
 	inner error
