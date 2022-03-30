@@ -15,7 +15,7 @@ import (
 
 var StreamBlocksParallelFiles = 1
 
-type InstanceFactory struct {
+type StreamFactory struct {
 	blocksStores      []dstore.Store
 	indexStore        dstore.Store
 	indexBundleSizes  []uint64
@@ -25,7 +25,7 @@ type InstanceFactory struct {
 	//transformRegistry *transform.Registry
 }
 
-func NewInstanceFactory(
+func NewStreamFactory(
 	blocksStores []dstore.Store,
 	indexStore dstore.Store,
 	indexBundleSizes []uint64,
@@ -33,14 +33,14 @@ func NewInstanceFactory(
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
 	//transformRegistry *transform.Registry,
-) *InstanceFactory {
+) *StreamFactory {
 	if tracker != nil {
 		tracker = tracker.Clone()
 		if liveHeadTracker != nil {
 			tracker.AddGetter(bstream.BlockStreamHeadTarget, liveHeadTracker)
 		}
 	}
-	return &InstanceFactory{
+	return &StreamFactory{
 		blocksStores:      blocksStores,
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
@@ -51,12 +51,12 @@ func NewInstanceFactory(
 	}
 }
 
-func (i *InstanceFactory) New(
+func (i *StreamFactory) New(
 	ctx context.Context,
 	preprocFunc bstream.PreprocessFunc,
 	handler bstream.Handler,
 	blockIndexProvider bstream.BlockIndexProvider,
-	request *pbfirehose.Request, // instanceFactory will not manage transforms
+	request *pbfirehose.Request, // StreamFactory will not manage transforms for now
 	logger *zap.Logger) (*stream.Stream, error) {
 
 	logger.Info("processing incoming blocks request", zap.Reflect("req", request))

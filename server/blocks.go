@@ -135,7 +135,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 	}
 
-	str, err := s.instanceFactory.New(ctx, preprocFunc, handlerFunc, blockIndexProvider, request, logger)
+	str, err := s.streamFactory.New(ctx, preprocFunc, handlerFunc, blockIndexProvider, request, logger)
 	if err != nil {
 		return err
 	}

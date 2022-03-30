@@ -124,7 +124,7 @@ func (a *App) Run() error {
 
 	a.logger.Info("creating gRPC server", zap.Bool("live_support", withLive))
 
-	instanceFactory := firehose.NewInstanceFactory(
+	streamFactory := firehose.NewStreamFactory(
 		blockStores,
 		store,
 		a.config.IrreversibleBlocksBundleSizes,
@@ -137,7 +137,7 @@ func (a *App) Run() error {
 
 	server := server.New(
 		a.modules.TransformRegistry,
-		instanceFactory,
+		streamFactory,
 		a.logger,
 		a.modules.Authenticator,
 		a.IsReady,

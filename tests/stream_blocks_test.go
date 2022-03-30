@@ -23,7 +23,7 @@ package firehose
 //	blocksStores := []dstore.Store{store}
 //	logger := zap.NewNop()
 //
-//	i := NewInstanceFactory(
+//	i := NewStreamFactory(
 //		blocksStores,
 //		idxStore,
 //		[]uint64{10000, 1000, 100},

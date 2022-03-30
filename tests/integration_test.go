@@ -133,7 +133,7 @@ package firehose
 //			fmt.Println(bstream.GetProtocolFirstStreamableBlock)
 //			tracker.AddResolver(bstream.OffsetStartBlockResolver(200))
 //
-//			i := NewInstanceFactory(
+//			i := NewStreamFactory(
 //				[]dstore.Store{bs},
 //				irrStore,
 //				[]uint64{10000, 1000, 100},

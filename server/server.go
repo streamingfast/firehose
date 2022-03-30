@@ -18,7 +18,7 @@ import (
 )
 
 type Server struct {
-	instanceFactory   *firehose.InstanceFactory
+	streamFactory     *firehose.StreamFactory
 	transformRegistry *transform.Registry
 
 	ready        bool
@@ -31,7 +31,7 @@ type Server struct {
 
 func New(
 	transformRegistry *transform.Registry,
-	instanceFactory *firehose.InstanceFactory,
+	streamFactory *firehose.StreamFactory,
 	logger *zap.Logger,
 	authenticator dauth.Authenticator,
 	isReady func(context.Context) bool,
@@ -67,7 +67,7 @@ func New(
 	s := &Server{
 		Server:            grpcServer,
 		transformRegistry: transformRegistry,
-		instanceFactory:   instanceFactory,
+		streamFactory:     streamFactory,
 		listenAddr:        strings.ReplaceAll(listenAddr, "*", ""),
 		postHookFunc:      postHookFunc,
 		logger:            logger,
