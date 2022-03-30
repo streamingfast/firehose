@@ -369,6 +369,10 @@ github.com/streamingfast/bstream v0.0.2-0.20220329173158-d4f1ccdf0a2e h1:JKzju3s
 github.com/streamingfast/bstream v0.0.2-0.20220329173158-d4f1ccdf0a2e/go.mod h1:Cd/32kGRHt2aqJ62PLQZQ9O3azBT/vCPvCrP7vBc2cs=
 github.com/streamingfast/bstream v0.0.2-0.20220330100741-399f800d2157 h1:Cx4Tf/mLmplwYk2M2xeLao1FmUeSHPXBnJCz/DoVU+o=
 github.com/streamingfast/bstream v0.0.2-0.20220330100741-399f800d2157/go.mod h1:Cd/32kGRHt2aqJ62PLQZQ9O3azBT/vCPvCrP7vBc2cs=
+github.com/streamingfast/bstream v0.0.2-0.20220330121741-a12ccbdc3624 h1:Qe7wbQKpR3hHjQ0IG6ArhErdyiyCao1+FGeOhnlM6EU=
+github.com/streamingfast/bstream v0.0.2-0.20220330121741-a12ccbdc3624/go.mod h1:Cd/32kGRHt2aqJ62PLQZQ9O3azBT/vCPvCrP7vBc2cs=
+github.com/streamingfast/bstream v0.0.2-0.20220330124346-02408ab3db65 h1:uSQepppZad0W6BgXg6cAq0pFFYqobuBUA28ybK2OVlE=
+github.com/streamingfast/bstream v0.0.2-0.20220330124346-02408ab3db65/go.mod h1:Cd/32kGRHt2aqJ62PLQZQ9O3azBT/vCPvCrP7vBc2cs=
 github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1 h1:jZrytO3UXSEQEG1pTHDEfnLkc5JK5KEY7urxhV7bvSw=
 github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1/go.mod h1:FIYpVqt+ICVuNBoOH3ZIicIctpVoCq3393+RpfXsPEM=
 github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 h1:m/3aIPNXCwZ9m/dfYdOs8ftrS7GJl82ipVr6K2aZiBs=

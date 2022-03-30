@@ -83,17 +83,14 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		return nil
 	})
 
-	var preprocFunc bstream.PreprocessFunc
-	var blockIndexProvider bstream.BlockIndexProvider
 	if s.transformRegistry != nil {
-		pp, bip, passthroughTr, regDesc, err := s.transformRegistry.BuildFromTransforms(request.Transforms)
+		passthroughTr, err := s.transformRegistry.PassthroughFromTransforms(request.Transforms)
 		if err != nil {
 			return status.Errorf(codes.Internal, "unable to create pre-proc function: %s", err)
 		}
 
 		if passthroughTr != nil {
 			logger.Info("running passthrough")
-
 			outputFunc := func(cursor *bstream.Cursor, message *anypb.Any) error {
 				resp := &pbfirehose.Response{
 					Step:   stepToProto(cursor.Step),
@@ -121,21 +118,18 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 				logger.Check(level, "stream sent message from transform").Write(zap.Uint64("blocknum", blocknum), zap.Duration("duration", time.Since(start)))
 				return nil
 			}
+			request.Transforms = nil
 
-			return passthroughTr.Run(ctx, request, outputFunc)
+			return passthroughTr.Run(ctx, request, s.streamFactory.New, outputFunc)
 			//  --> will want to start a few firehose instances,sources, manage them, process them...
 			//  --> I give them an output func to print back to the user with the request
 			//   --> I could HERE give him the
 		}
-
-		logger = logger.With(zap.String("transforms", regDesc))
-		preprocFunc = pp
-		blockIndexProvider = bip
 	} else if len(request.Transforms) > 0 {
 		return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 	}
 
-	str, err := s.streamFactory.New(ctx, preprocFunc, handlerFunc, blockIndexProvider, request, logger)
+	str, err := s.streamFactory.New(ctx, handlerFunc, request, logger)
 	if err != nil {
 		return err
 	}

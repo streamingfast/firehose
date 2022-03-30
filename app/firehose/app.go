@@ -131,9 +131,8 @@ func (a *App) Run() error {
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
+		a.modules.TransformRegistry,
 	)
-
-	///// Run()
 
 	server := server.New(
 		a.modules.TransformRegistry,
