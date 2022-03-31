@@ -21,6 +21,7 @@ import (
 
 	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/firehose"
+	"github.com/streamingfast/firehose/metrics"
 	"github.com/streamingfast/firehose/server"
 
 	"github.com/streamingfast/bstream"
@@ -74,6 +75,7 @@ func New(logger *zap.Logger, config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
+	dmetrics.Register(metrics.Metricset)
 	appCtx, cancel := context.WithCancel(context.Background())
 	a.Shutter.OnTerminating(func(_ error) {
 		cancel()

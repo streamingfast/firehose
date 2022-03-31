@@ -8,6 +8,7 @@ import (
 
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/stream"
+	"github.com/streamingfast/firehose/metrics"
 	"github.com/streamingfast/logging"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/zap"
@@ -19,6 +20,10 @@ import (
 )
 
 func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_BlocksServer) error {
+	metrics.ActiveRequests.Inc()
+	metrics.RequestCounter.Inc()
+	defer metrics.ActiveRequests.Dec()
+
 	ctx := streamSrv.Context()
 	logger := logging.Logger(ctx, s.logger)
 
@@ -90,7 +95,9 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		}
 
 		if passthroughTr != nil {
-			logger.Info("running passthrough")
+			metrics.ActiveSubstreams.Inc()
+			defer metrics.ActiveSubstreams.Dec()
+			metrics.SubstreamsCounter.Inc()
 			outputFunc := func(cursor *bstream.Cursor, message *anypb.Any) error {
 				var blocknum uint64
 				var opaqueCursor string

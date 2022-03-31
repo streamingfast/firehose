@@ -9,6 +9,7 @@ import (
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/firehose"
 	pbbstream "github.com/streamingfast/firehose/pb/dfuse/bstream/v1"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
@@ -27,6 +28,7 @@ type Server struct {
 	*dgrpc.Server
 	listenAddr string
 	logger     *zap.Logger
+	metrics    dmetrics.Set
 }
 
 func New(
