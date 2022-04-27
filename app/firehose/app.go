@@ -19,17 +19,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/streamingfast/bstream/transform"
-	"github.com/streamingfast/firehose"
-	"github.com/streamingfast/firehose/metrics"
-	"github.com/streamingfast/firehose/server"
-
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/blockstream"
 	"github.com/streamingfast/bstream/hub"
+	"github.com/streamingfast/bstream/transform"
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/firehose"
+	"github.com/streamingfast/firehose/metrics"
+	"github.com/streamingfast/firehose/server"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -45,13 +44,16 @@ type Config struct {
 	RealtimeTolerance               time.Duration
 }
 
+type RegisterServiceExtensionFunc func(firehoseServer *server.Server, streamFactory *firehose.StreamFactory, logger *zap.Logger)
+
 type Modules struct {
 	// Required dependencies
-	Authenticator         dauth.Authenticator
-	HeadTimeDriftMetric   *dmetrics.HeadTimeDrift
-	HeadBlockNumberMetric *dmetrics.HeadBlockNum
-	Tracker               *bstream.Tracker
-	TransformRegistry     *transform.Registry
+	Authenticator            dauth.Authenticator
+	HeadTimeDriftMetric      *dmetrics.HeadTimeDrift
+	HeadBlockNumberMetric    *dmetrics.HeadBlockNum
+	Tracker                  *bstream.Tracker
+	TransformRegistry        *transform.Registry
+	RegisterServiceExtension RegisterServiceExtensionFunc
 }
 
 type App struct {
@@ -164,6 +166,10 @@ func (a *App) Run() error {
 			break
 		}
 		go subscriptionHub.LaunchAt(start)
+	}
+
+	if a.modules.RegisterServiceExtension != nil {
+		a.modules.RegisterServiceExtension(server, streamFactory, a.logger)
 	}
 
 	go server.Launch()

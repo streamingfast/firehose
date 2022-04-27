@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-
 	"strings"
 
 	"github.com/streamingfast/bstream/transform"
