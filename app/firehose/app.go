@@ -162,6 +162,22 @@ func (a *App) Run() error {
 				time.Sleep(time.Second)
 				continue
 			}
+			head, err := a.modules.Tracker.Get(appCtx, bstream.BlockStreamHeadTarget)
+			if err != nil {
+				a.logger.Info("firehose hub: tracker cannot get HEAD block number, rewinding start block further", zap.Error(err))
+				start = previousBundle(lib.Num())
+				break
+			}
+
+			if head.Num()/100 == lib.Num()/100 {
+				start = previousBundle(lib.Num())
+				a.logger.Info("firehose hub: tracker HEAD is in same bundle as LIB, rewinding start block further",
+					zap.Uint64("head", head.Num()),
+					zap.Uint64("lib", lib.Num()),
+					zap.Uint64("start", start),
+				)
+				break
+			}
 			start = lib.Num()
 			break
 		}
@@ -184,6 +200,17 @@ func (a *App) Run() error {
 	a.isReady.CAS(false, true)
 
 	return nil
+}
+
+func previousBundle(in uint64) uint64 {
+	if in <= 100 {
+		return in
+	}
+	out := (in - 100) / 100 * 100 // round down
+	if out < bstream.GetProtocolFirstStreamableBlock {
+		return bstream.GetProtocolFirstStreamableBlock
+	}
+	return out
 }
 
 func (a *App) newSubscriptionHub(blockStores []dstore.Store) (*hub.SubscriptionHub, error) {
