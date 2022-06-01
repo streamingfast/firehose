@@ -59,8 +59,6 @@ func (i *StreamFactory) New(
 	request *pbfirehose.Request,
 	logger *zap.Logger) (*stream.Stream, error) {
 
-	logger.Info("processing incoming blocks request", zap.Reflect("req", request))
-
 	options := []stream.Option{
 		stream.WithLogger(logging.Logger(ctx, logger)),
 		stream.WithForkableSteps(stepsFromProto(request.ForkSteps)),
@@ -70,12 +68,18 @@ func (i *StreamFactory) New(
 		stream.WithStreamBlocksParallelFiles(StreamBlocksParallelFiles),
 	}
 
+	logger = logger.With(zap.Reflect("req", request))
+
 	preprocFunc, blockIndexProvider, desc, err := i.transformRegistry.BuildFromTransforms(request.Transforms)
 	if err != nil {
+		logger.Error("cannot process incoming blocks request transforms", zap.Error(err))
 		return nil, fmt.Errorf("building from transforms: %w", err)
 	}
 	if preprocFunc != nil {
 		options = append(options, stream.WithPreprocessFunc(preprocFunc))
+	}
+	if blockIndexProvider != nil {
+		logger = logger.With(zap.Bool("with_index_provider", true))
 	}
 	if desc != "" {
 		logger = logger.With(zap.String("transform_desc", desc))
@@ -87,6 +91,8 @@ func (i *StreamFactory) New(
 			options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
 		}
 	}
+
+	logger.Info("processing incoming blocks request")
 
 	if request.StartCursor != "" {
 		cur, err := bstream.CursorFromOpaque(request.StartCursor)
