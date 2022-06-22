@@ -13,13 +13,14 @@ import (
 	"google.golang.org/grpc/credentials/oauth"
 )
 
-//	firehoseClient, grpcCallOpts, err := NewFirehoseClient(endpoint, jwt, insecure, plaintext)
+//	firehoseClient, closeFunc, grpcCallOpts, err := NewFirehoseClient(endpoint, jwt, insecure, plaintext)
+//  defer closeFunc()
 //	stream, err := firehoseClient.Blocks(context.Background(), request, grpcCallOpts...)
-func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainTextConnection bool) (pbfirehose.StreamClient, []grpc.CallOption, error) {
+func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainTextConnection bool) (cli pbfirehose.StreamClient, closeFunc func() error, callOpts []grpc.CallOption, err error) {
 	skipAuth := jwt == ""
 
 	if useInsecureTSLConnection && usePlainTextConnection {
-		return nil, nil, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
+		return nil, nil, nil, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
 	}
 
 	var dialOptions []grpc.DialOption
@@ -33,14 +34,15 @@ func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainT
 
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create external gRPC client")
+		return nil, nil, nil, fmt.Errorf("unable to create external gRPC client")
 	}
+	closeFunc = conn.Close
+	cli = pbfirehose.NewStreamClient(conn)
 
-	var callOpts []grpc.CallOption
 	if !skipAuth {
 		credentials := oauth.NewOauthAccess(&oauth2.Token{AccessToken: jwt, TokenType: "Bearer"})
 		callOpts = append(callOpts, grpc.PerRPCCredentials(credentials))
 	}
 
-	return pbfirehose.NewStreamClient(conn), callOpts, nil
+	return
 }
