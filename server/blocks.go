@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -14,6 +15,7 @@ import (
 	"go.uber.org/zap"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -26,6 +28,16 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 
 	ctx := streamSrv.Context()
 	logger := logging.Logger(ctx, s.logger)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknown"
+		logger.Warn("cannot determine hostname, using 'unknown'", zap.Error(err))
+	}
+	md := metadata.New(map[string]string{"hostname": hostname})
+	if err := streamSrv.SendHeader(md); err != nil {
+		logger.Warn("cannot send metadata header", zap.Error(err))
+	}
 
 	var blockInterceptor func(blk interface{}) interface{}
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
