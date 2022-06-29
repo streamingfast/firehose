@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

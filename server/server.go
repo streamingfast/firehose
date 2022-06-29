@@ -10,8 +10,7 @@ import (
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/firehose"
-	pbbstream "github.com/streamingfast/firehose/pb/dfuse/bstream/v1"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -77,10 +76,6 @@ func New(
 	logger.Info("registering grpc services")
 	grpcServer.RegisterService(func(gs *grpc.Server) {
 		pbfirehose.RegisterStreamServer(gs, s)
-
-		// Legacy support the old BlockStreamV2 api
-		legacyBstreamV2Proxy := NewLegacyBstreamV2Proxy(s)
-		pbbstream.RegisterBlockStreamV2Server(gs, legacyBstreamV2Proxy)
 	})
 
 	return s

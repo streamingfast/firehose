@@ -11,7 +11,7 @@ import (
 	"github.com/streamingfast/bstream/stream"
 	"github.com/streamingfast/firehose/metrics"
 	"github.com/streamingfast/logging"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"go.uber.org/zap"
 
 	"google.golang.org/grpc/codes"
@@ -196,7 +196,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 func stepToProto(step bstream.StepType) pbfirehose.ForkStep {
 	// This step mapper absorbs the Redo into a New for our consumesr.
 	switch step {
-	case bstream.StepNew, bstream.StepRedo:
+	case bstream.StepNew:
 		return pbfirehose.ForkStep_STEP_NEW
 	case bstream.StepUndo:
 		return pbfirehose.ForkStep_STEP_UNDO

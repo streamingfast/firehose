@@ -35,7 +35,7 @@ import (
 )
 
 type Config struct {
-	BlockStoreURLs                  []string // Blocks store
+	BlockStoreURL                   string
 	IrreversibleBlocksIndexStoreURL string
 	IrreversibleBlocksBundleSizes   []uint64
 	BlockStreamAddr                 string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
@@ -88,23 +88,9 @@ func (a *App) Run() error {
 		return fmt.Errorf("invalid app config: %w", err)
 	}
 
-	blockStores := make([]dstore.Store, len(a.config.BlockStoreURLs))
-	for i, url := range a.config.BlockStoreURLs {
-		store, err := dstore.NewDBinStore(url)
-		if err != nil {
-			return fmt.Errorf("failed setting up block store from url %q: %w", url, err)
-		}
-
-		blockStores[i] = store
-	}
-
-	var store dstore.Store
-	if url := a.config.IrreversibleBlocksIndexStoreURL; url != "" {
-		var err error
-		store, err = dstore.NewStore(url, "", "", false)
-		if err != nil {
-			return fmt.Errorf("failed setting up irreversible blocks index store from url %q: %w", url, err)
-		}
+	blocksStore, err := dstore.NewDBinStore(a.config.BlockStoreURL)
+	if err != nil {
+		return fmt.Errorf("failed setting up block store from url %q: %w", a.config.BlockStoreURL, err)
 	}
 
 	withLive := a.config.BlockStreamAddr != ""
@@ -115,7 +101,7 @@ func (a *App) Run() error {
 
 	if withLive {
 		var err error
-		subscriptionHub, err = a.newSubscriptionHub(blockStores)
+		subscriptionHub, err = a.newSubscriptionHub(blocksStore)
 		if err != nil {
 			return fmt.Errorf("setting up subscription hub: %w", err)
 		}
@@ -129,9 +115,7 @@ func (a *App) Run() error {
 	a.logger.Info("creating gRPC server", zap.Bool("live_support", withLive))
 
 	streamFactory := firehose.NewStreamFactory(
-		blockStores,
-		store,
-		a.config.IrreversibleBlocksBundleSizes,
+		blocksStore,
 		serverLiveSourceFactory,
 		serverLiveHeadTracker,
 		a.modules.Tracker,
@@ -213,7 +197,7 @@ func previousBundle(in uint64) uint64 {
 	return out
 }
 
-func (a *App) newSubscriptionHub(blockStores []dstore.Store) (*hub.SubscriptionHub, error) {
+func (a *App) newSubscriptionHub(blockStore dstore.Store) (*hub.SubscriptionHub, error) {
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		return blockstream.NewSource(
@@ -231,13 +215,8 @@ func (a *App) newSubscriptionHub(blockStores []dstore.Store) (*hub.SubscriptionH
 	})
 
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		var options []bstream.FileSourceOption
-		if len(blockStores) > 1 {
-			options = append(options, bstream.FileSourceWithSecondaryBlocksStores(blockStores[1:]))
-		}
-
-		a.logger.Info("creating file source", zap.String("block_store", blockStores[0].ObjectPath("")), zap.Uint64("start_block_num", startBlockNum))
-		src := bstream.NewFileSource(blockStores[0], startBlockNum, 1, nil, h, options...)
+		a.logger.Info("creating file source", zap.String("block_store", blockStore.ObjectPath("")), zap.Uint64("start_block_num", startBlockNum))
+		src := bstream.NewFileSource(blockStore, startBlockNum, h, a.logger)
 		return src
 	})
 

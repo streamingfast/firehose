@@ -9,7 +9,7 @@ import (
 	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/logging"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +18,7 @@ import (
 var StreamBlocksParallelFiles = 1
 
 type StreamFactory struct {
-	blocksStores      []dstore.Store
+	blocksStore       dstore.Store
 	indexStore        dstore.Store
 	indexBundleSizes  []uint64
 	liveSourceFactory bstream.SourceFactory
@@ -28,9 +28,7 @@ type StreamFactory struct {
 }
 
 func NewStreamFactory(
-	blocksStores []dstore.Store,
-	indexStore dstore.Store,
-	indexBundleSizes []uint64,
+	blocksStore dstore.Store,
 	liveSourceFactory bstream.SourceFactory,
 	liveHeadTracker bstream.BlockRefGetter,
 	tracker *bstream.Tracker,
@@ -43,11 +41,9 @@ func NewStreamFactory(
 		}
 	}
 	return &StreamFactory{
-		blocksStores:      blocksStores,
+		blocksStore:       blocksStore,
 		liveSourceFactory: liveSourceFactory,
 		liveHeadTracker:   liveHeadTracker,
-		indexStore:        indexStore,
-		indexBundleSizes:  indexBundleSizes,
 		tracker:           tracker,
 		transformRegistry: transformRegistry,
 	}
@@ -61,7 +57,7 @@ func (i *StreamFactory) New(
 
 	options := []stream.Option{
 		stream.WithLogger(logging.Logger(ctx, logger)),
-		stream.WithForkableSteps(stepsFromProto(request.ForkSteps)),
+		//stream.WithForkableSteps(bstream.StepsFromProto(request.ForkSteps)),
 		stream.WithLiveHeadTracker(i.liveHeadTracker),
 		stream.WithTracker(i.tracker),
 		stream.WithStopBlock(request.StopBlockNum),
@@ -85,19 +81,19 @@ func (i *StreamFactory) New(
 		logger = logger.With(zap.String("transform_desc", desc))
 	}
 
-	if i.indexStore != nil {
-		options = append(options, stream.WithIrreversibleBlocksIndex(i.indexStore, i.indexBundleSizes))
-		if blockIndexProvider != nil {
-			options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
-		}
-	}
+	//if i.indexStore != nil {
+	//	options = append(options, stream.WithIrreversibleBlocksIndex(i.indexStore, i.indexBundleSizes))
+	//	if blockIndexProvider != nil {
+	//		options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
+	//	}
+	//}
 
 	logger.Info("processing incoming blocks request")
 
-	if request.StartCursor != "" {
-		cur, err := bstream.CursorFromOpaque(request.StartCursor)
+	if request.Cursor != "" {
+		cur, err := bstream.CursorFromOpaque(request.Cursor)
 		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid start cursor %q: %s", request.StartCursor, err)
+			return nil, status.Errorf(codes.InvalidArgument, "invalid start cursor %q: %s", request.Cursor, err)
 		}
 
 		options = append(options, stream.WithCursor(cur))
@@ -107,43 +103,5 @@ func (i *StreamFactory) New(
 		options = append(options, stream.WithLiveSource(i.liveSourceFactory))
 	}
 
-	return stream.New(i.blocksStores, request.StartBlockNum, handler, options...), nil
-}
-
-func stepsFromProto(steps []pbfirehose.ForkStep) bstream.StepType {
-	if len(steps) <= 0 {
-		return bstream.StepNew | bstream.StepRedo | bstream.StepUndo | bstream.StepIrreversible
-	}
-
-	var filter bstream.StepType
-	var containsNew bool
-	var containsUndo bool
-	for _, step := range steps {
-		if step == pbfirehose.ForkStep_STEP_NEW {
-			containsNew = true
-		}
-		if step == pbfirehose.ForkStep_STEP_UNDO {
-			containsUndo = true
-		}
-		filter |= stepFromProto(step)
-	}
-
-	// Redo is output into 'new' and has no proto equivalent
-	if containsNew && containsUndo {
-		filter |= bstream.StepRedo
-	}
-
-	return filter
-}
-
-func stepFromProto(step pbfirehose.ForkStep) bstream.StepType {
-	switch step {
-	case pbfirehose.ForkStep_STEP_NEW:
-		return bstream.StepNew
-	case pbfirehose.ForkStep_STEP_UNDO:
-		return bstream.StepUndo
-	case pbfirehose.ForkStep_STEP_IRREVERSIBLE:
-		return bstream.StepIrreversible
-	}
-	return bstream.StepType(0)
+	return stream.New(i.blocksStore, request.StartBlockNum, handler, options...), nil
 }
