@@ -39,7 +39,6 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		logger.Warn("cannot send metadata header", zap.Error(err))
 	}
 
-	var blockInterceptor func(blk interface{}) interface{}
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		cursorable := obj.(bstream.Cursorable)
 		cursor := cursorable.Cursor()
@@ -50,7 +49,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		wrapped := obj.(bstream.ObjectWrapper)
 		obj = wrapped.WrappedObject()
 		if obj == nil {
-			obj = block
+			obj = block.ToProtocol()
 		}
 
 		resp := &pbfirehose.Response{
@@ -58,18 +57,11 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 			Cursor: cursor.ToOpaque(),
 		}
 
-		switch v := obj.(type) { // use filtered block if passed as object
-		case *bstream.Block:
-			if v != nil {
-				block = v
-			}
-			anyProtocolBlock, err := block.ToAny(true, blockInterceptor)
-			if err != nil {
-				return fmt.Errorf("to any: %w", err)
-			}
-			resp.Block = anyProtocolBlock
+		switch v := obj.(type) {
+		case *anypb.Any:
+			resp.Block = v
+			break
 		case proto.Message:
-			// this is handling the transform cases
 			cnt, err := anypb.New(v)
 			if err != nil {
 				return fmt.Errorf("to any: %w", err)
@@ -201,7 +193,7 @@ func stepToProto(step bstream.StepType) pbfirehose.ForkStep {
 	case bstream.StepUndo:
 		return pbfirehose.ForkStep_STEP_UNDO
 	case bstream.StepIrreversible:
-		return pbfirehose.ForkStep_STEP_IRREVERSIBLE
+		return pbfirehose.ForkStep_STEP_FINAL
 	}
 	panic("unsupported step")
 }

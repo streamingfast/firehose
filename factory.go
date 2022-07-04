@@ -17,6 +17,10 @@ import (
 
 var StreamBlocksParallelFiles = 1
 
+var bstreamToProtocolPreprocFunc = func(blk *bstream.Block) (interface{}, error) {
+	return blk.ToProtocol(), nil
+}
+
 type StreamFactory struct {
 	blocksStore       dstore.Store
 	indexStore        dstore.Store
@@ -73,6 +77,8 @@ func (i *StreamFactory) New(
 	}
 	if preprocFunc != nil {
 		options = append(options, stream.WithPreprocessFunc(preprocFunc))
+	} else {
+		options = append(options, stream.WithPreprocessFunc(bstreamToProtocolPreprocFunc)) // decoding bstream in parallel, faster
 	}
 	if blockIndexProvider != nil {
 		logger = logger.With(zap.Bool("with_index_provider", true))
