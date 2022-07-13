@@ -52,8 +52,13 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 			obj = block.ToProtocol()
 		}
 
+		protoStep, skip := stepToProto(step, request.FinalBlocksOnly)
+		if skip {
+			return nil
+		}
+
 		resp := &pbfirehose.Response{
-			Step:   stepToProto(step),
+			Step:   protoStep,
 			Cursor: cursor.ToOpaque(),
 		}
 
@@ -105,14 +110,19 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 			outputFunc := func(cursor *bstream.Cursor, message *anypb.Any) error {
 				var blocknum uint64
 				var opaqueCursor string
-				var forkStep pbfirehose.ForkStep
+				var outStep pbfirehose.ForkStep
 				if cursor != nil {
 					blocknum = cursor.Block.Num()
 					opaqueCursor = cursor.ToOpaque()
-					forkStep = stepToProto(cursor.Step)
+
+					protoStep, skip := stepToProto(cursor.Step, request.FinalBlocksOnly)
+					if skip {
+						return nil
+					}
+					outStep = protoStep
 				}
 				resp := &pbfirehose.Response{
-					Step:   forkStep,
+					Step:   outStep,
 					Cursor: opaqueCursor,
 					Block:  message,
 				}
@@ -185,15 +195,19 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 
 }
 
-func stepToProto(step bstream.StepType) pbfirehose.ForkStep {
-	// This step mapper absorbs the Redo into a New for our consumesr.
-	switch step {
-	case bstream.StepNew:
-		return pbfirehose.ForkStep_STEP_NEW
-	case bstream.StepUndo:
-		return pbfirehose.ForkStep_STEP_UNDO
-	case bstream.StepIrreversible:
-		return pbfirehose.ForkStep_STEP_FINAL
+func stepToProto(step bstream.StepType, finalBlocksOnly bool) (outStep pbfirehose.ForkStep, skip bool) {
+	if finalBlocksOnly {
+		if step.Matches(bstream.StepIrreversible) {
+			return pbfirehose.ForkStep_STEP_FINAL, false
+		}
+		return 0, true
+	}
+
+	if step.Matches(bstream.StepNew) {
+		return pbfirehose.ForkStep_STEP_NEW, false
+	}
+	if step.Matches(bstream.StepUndo) {
+		return pbfirehose.ForkStep_STEP_UNDO, false
 	}
 	panic("unsupported step")
 }
