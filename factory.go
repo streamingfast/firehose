@@ -5,80 +5,67 @@ import (
 	"fmt"
 
 	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/bstream/stream"
 	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/dstore"
-	"github.com/streamingfast/logging"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-var StreamBlocksParallelFiles = 1
+// StreamMergedBlocksPreprocThreads defines the number of threads
+// that the filesource is allowed to use PER FILE. Used for decoding
+// bstream blocks to protobuf and applying other transforms
+var StreamMergedBlocksPreprocThreads = 25
 
 var bstreamToProtocolPreprocFunc = func(blk *bstream.Block) (interface{}, error) {
 	return blk.ToProtocol(), nil
 }
 
 type StreamFactory struct {
-	blocksStore       dstore.Store
-	indexStore        dstore.Store
-	indexBundleSizes  []uint64
-	liveSourceFactory bstream.SourceFactory
-	liveHeadTracker   bstream.BlockRefGetter
-	tracker           *bstream.Tracker
+	mergedBlocksStore dstore.Store
+	oneBlocksStore    dstore.Store
+	hub               *hub.ForkableHub
 	transformRegistry *transform.Registry
 }
 
 func NewStreamFactory(
-	blocksStore dstore.Store,
-	liveSourceFactory bstream.SourceFactory,
-	liveHeadTracker bstream.BlockRefGetter,
-	tracker *bstream.Tracker,
+	mergedBlocksStore dstore.Store,
+	oneBlocksStore dstore.Store,
+	hub *hub.ForkableHub,
 	transformRegistry *transform.Registry,
 ) *StreamFactory {
-	if tracker != nil {
-		tracker = tracker.Clone()
-		if liveHeadTracker != nil {
-			tracker.AddGetter(bstream.BlockStreamHeadTarget, liveHeadTracker)
-		}
-	}
 	return &StreamFactory{
-		blocksStore:       blocksStore,
-		liveSourceFactory: liveSourceFactory,
-		liveHeadTracker:   liveHeadTracker,
-		tracker:           tracker,
+		mergedBlocksStore: mergedBlocksStore,
+		oneBlocksStore:    oneBlocksStore,
+		hub:               hub,
 		transformRegistry: transformRegistry,
 	}
 }
 
-func (i *StreamFactory) New(
+func (sf *StreamFactory) New(
 	ctx context.Context,
 	handler bstream.Handler,
 	request *pbfirehose.Request,
 	logger *zap.Logger) (*stream.Stream, error) {
 
-	options := []stream.Option{
-		stream.WithLogger(logging.Logger(ctx, logger)),
-		//stream.WithForkableSteps(bstream.StepsFromProto(request.ForkSteps)),
-		stream.WithLiveHeadTracker(i.liveHeadTracker),
-		stream.WithTracker(i.tracker),
-		stream.WithStopBlock(request.StopBlockNum),
-		stream.WithStreamBlocksParallelFiles(StreamBlocksParallelFiles),
-	}
-
 	logger = logger.With(zap.Reflect("req", request))
 
-	preprocFunc, blockIndexProvider, desc, err := i.transformRegistry.BuildFromTransforms(request.Transforms)
+	options := []stream.Option{
+		stream.WithStopBlock(request.StopBlockNum),
+	}
+
+	preprocFunc, blockIndexProvider, desc, err := sf.transformRegistry.BuildFromTransforms(request.Transforms)
 	if err != nil {
 		logger.Error("cannot process incoming blocks request transforms", zap.Error(err))
 		return nil, fmt.Errorf("building from transforms: %w", err)
 	}
 	if preprocFunc != nil {
-		options = append(options, stream.WithPreprocessFunc(preprocFunc))
+		options = append(options, stream.WithPreprocessFunc(preprocFunc, StreamMergedBlocksPreprocThreads))
 	} else {
-		options = append(options, stream.WithPreprocessFunc(bstreamToProtocolPreprocFunc)) // decoding bstream in parallel, faster
+		options = append(options, stream.WithPreprocessFunc(bstreamToProtocolPreprocFunc, StreamMergedBlocksPreprocThreads)) // decoding bstream in parallel, faster
 	}
 	if blockIndexProvider != nil {
 		logger = logger.With(zap.Bool("with_index_provider", true))
@@ -87,12 +74,11 @@ func (i *StreamFactory) New(
 		logger = logger.With(zap.String("transform_desc", desc))
 	}
 
-	//if i.indexStore != nil {
-	//	options = append(options, stream.WithIrreversibleBlocksIndex(i.indexStore, i.indexBundleSizes))
-	//	if blockIndexProvider != nil {
-	//		options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
-	//	}
-	//}
+	options = append(options, stream.WithLogger(logger))
+
+	if blockIndexProvider != nil {
+		options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
+	}
 
 	logger.Info("processing incoming blocks request")
 
@@ -105,9 +91,13 @@ func (i *StreamFactory) New(
 		options = append(options, stream.WithCursor(cur))
 	}
 
-	if i.liveSourceFactory != nil {
-		options = append(options, stream.WithLiveSource(i.liveSourceFactory))
-	}
+	str := stream.New(
+		sf.oneBlocksStore,
+		sf.mergedBlocksStore,
+		sf.hub,
+		request.StartBlockNum,
+		handler,
+		options...)
 
-	return stream.New(i.blocksStore, request.StartBlockNum, handler, options...), nil
+	return str, nil
 }
