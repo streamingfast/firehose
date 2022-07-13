@@ -41,7 +41,6 @@ type Config struct {
 	KeptFinalBlocks         uint64
 	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
-	RealtimeTolerance       time.Duration
 }
 
 type RegisterServiceExtensionFunc func(firehoseServer *server.Server, streamFactory *firehose.StreamFactory, logger *zap.Logger)
