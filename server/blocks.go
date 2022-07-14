@@ -209,5 +209,5 @@ func stepToProto(step bstream.StepType, finalBlocksOnly bool) (outStep pbfirehos
 	if step.Matches(bstream.StepUndo) {
 		return pbfirehose.ForkStep_STEP_UNDO, false
 	}
-	panic("unsupported step")
+	return 0, true // simply skip irreversible or stalled here
 }
