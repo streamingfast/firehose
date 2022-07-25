@@ -37,8 +37,7 @@ import (
 type Config struct {
 	MergedBlocksStoreURL    string
 	OneBlocksStoreURL       string
-	BlockStreamAddr         string // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
-	KeptFinalBlocks         uint64
+	BlockStreamAddr         string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
 	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
 }
