@@ -80,6 +80,10 @@ func (sf *StreamFactory) New(
 		options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
 	}
 
+	if request.FinalBlocksOnly {
+		options = append(options, stream.WithFinalBlocksOnly())
+	}
+
 	logger.Info("processing incoming blocks request")
 
 	if request.Cursor != "" {
