@@ -1,2 +1,0 @@
-generate.sh - Tue Mar  1 11:58:21 EST 2022 - maoueh
-streamingfast/firehose revision: 1a11f3a913467780af7915ccffb68b9b625b6b8c

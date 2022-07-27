@@ -10,7 +10,8 @@ import (
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/firehose"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v2"
+	pbfirehoseV1 "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbfirehoseV2 "github.com/streamingfast/pbgo/sf/firehose/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -21,7 +22,7 @@ type Server struct {
 	transformRegistry *transform.Registry
 
 	ready        bool
-	postHookFunc func(context.Context, *pbfirehose.Response)
+	postHookFunc func(context.Context, *pbfirehoseV2.Response)
 
 	*dgrpc.Server
 	listenAddr string
@@ -38,7 +39,7 @@ func New(
 	listenAddr string,
 ) *Server {
 
-	postHookFunc := (func(ctx context.Context, response *pbfirehose.Response) {
+	postHookFunc := (func(ctx context.Context, response *pbfirehoseV2.Response) {
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
 			Source:      "firehose",
@@ -75,7 +76,8 @@ func New(
 
 	logger.Info("registering grpc services")
 	grpcServer.RegisterService(func(gs *grpc.Server) {
-		pbfirehose.RegisterStreamServer(gs, s)
+		pbfirehoseV2.RegisterStreamServer(gs, s)
+		pbfirehoseV1.RegisterStreamServer(gs, NewFirehoseProxyV1ToV2(s)) // compatibility with firehose
 	})
 
 	return s
