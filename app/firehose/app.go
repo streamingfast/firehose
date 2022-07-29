@@ -122,6 +122,7 @@ func (a *App) Run() error {
 		if err != nil {
 			return fmt.Errorf("setting up subscription hub: %w", err)
 		}
+		forkableHub.OnTerminated(a.Shutdown)
 
 		go forkableHub.Run()
 	}
