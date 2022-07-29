@@ -21,7 +21,6 @@ type Server struct {
 	streamFactory     *firehose.StreamFactory
 	transformRegistry *transform.Registry
 
-	ready        bool
 	postHookFunc func(context.Context, *pbfirehoseV2.Response)
 
 	*dgrpc.Server
@@ -85,14 +84,6 @@ func New(
 
 func (s *Server) Launch() {
 	s.Server.Launch(s.listenAddr)
-}
-
-func (s *Server) SetReady() {
-	s.ready = true
-}
-
-func (s *Server) IsReady() bool {
-	return s.ready
 }
 
 func createHealthCheck(isReady func(ctx context.Context) bool) dgrpc.HealthCheck {

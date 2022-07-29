@@ -159,9 +159,8 @@ func (a *App) Run() error {
 		}
 
 		a.logger.Info("launching gRPC server", zap.Bool("live_support", withLive))
-		server.Launch()
-		a.logger.Info("firehose is now ready to accept request")
 		a.isReady.CAS(false, true)
+		server.Launch()
 	}()
 
 	return nil
