@@ -121,8 +121,8 @@ func (a *App) Run() error {
 			)
 		})
 
-		oneBlocksSourceFactory := bstream.SourceFromNumFactory(func(num uint64, h bstream.Handler) bstream.Source {
-			src, err := bstream.NewOneBlocksSource(num, oneBlocksStore, h)
+		oneBlocksSourceFactory := bstream.SourceFromNumFactoryWithSkipFunc(func(num uint64, h bstream.Handler, skipFunc func(string) bool) bstream.Source {
+			src, err := bstream.NewOneBlocksSource(num, oneBlocksStore, h, bstream.OneBlocksSourceWithSkipperFunc(skipFunc))
 			if err != nil {
 				return nil
 			}
