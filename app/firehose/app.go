@@ -96,11 +96,22 @@ func (a *App) Run() error {
 	var forkableHub *hub.ForkableHub
 
 	if withLive {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		var initialLiveHeadBlock uint64
+		head, _, err := bstream.GetStreamHeadInfo(ctx, a.config.BlockStreamAddr)
+		if err != nil {
+			a.logger.Info("cannot get initial live stream head info, no startup optimization", zap.Error(err))
+		} else {
+			initialLiveHeadBlock = head.Num()
+		}
+		cancel()
+
 		liveSourceFactory := bstream.SourceFactory(func(h bstream.Handler) bstream.Source {
+
 			return blockstream.NewSource(
 				context.Background(),
 				a.config.BlockStreamAddr,
-				5,
+				-1, // from LIB
 				bstream.HandlerFunc(func(blk *bstream.Block, obj interface{}) error {
 					a.modules.HeadBlockNumberMetric.SetUint64(blk.Num())
 					a.modules.HeadTimeDriftMetric.SetBlockTime(blk.Time())
@@ -122,6 +133,7 @@ func (a *App) Run() error {
 		if err != nil {
 			return fmt.Errorf("setting up subscription hub: %w", err)
 		}
+		forkableHub.InitialLiveSourceHeadNum = initialLiveHeadBlock // improve bootstrapping from blockstream directly
 		forkableHub.OnTerminated(a.Shutdown)
 
 		go forkableHub.Run()
