@@ -130,9 +130,6 @@ func (a *App) Run() error {
 		})
 
 		forkableHub = hub.NewForkableHub(liveSourceFactory, oneBlocksSourceFactory, 100)
-		if err != nil {
-			return fmt.Errorf("setting up subscription hub: %w", err)
-		}
 		forkableHub.InitialLiveSourceHeadNum = initialLiveHeadBlock // improve bootstrapping from blockstream directly
 		forkableHub.OnTerminated(a.Shutdown)
 
