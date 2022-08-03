@@ -26,20 +26,20 @@ var bstreamToProtocolPreprocFunc = func(blk *bstream.Block) (interface{}, error)
 
 type StreamFactory struct {
 	mergedBlocksStore dstore.Store
-	oneBlocksStore    dstore.Store
+	forkedBlocksStore dstore.Store
 	hub               *hub.ForkableHub
 	transformRegistry *transform.Registry
 }
 
 func NewStreamFactory(
 	mergedBlocksStore dstore.Store,
-	oneBlocksStore dstore.Store,
+	forkedBlocksStore dstore.Store,
 	hub *hub.ForkableHub,
 	transformRegistry *transform.Registry,
 ) *StreamFactory {
 	return &StreamFactory{
 		mergedBlocksStore: mergedBlocksStore,
-		oneBlocksStore:    oneBlocksStore,
+		forkedBlocksStore: forkedBlocksStore,
 		hub:               hub,
 		transformRegistry: transformRegistry,
 	}
@@ -96,7 +96,7 @@ func (sf *StreamFactory) New(
 	}
 
 	str := stream.New(
-		sf.oneBlocksStore,
+		sf.forkedBlocksStore,
 		sf.mergedBlocksStore,
 		sf.hub,
 		request.StartBlockNum,

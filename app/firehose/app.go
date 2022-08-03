@@ -37,6 +37,7 @@ import (
 type Config struct {
 	MergedBlocksStoreURL    string
 	OneBlocksStoreURL       string
+	ForkedBlocksStoreURL    string
 	BlockStreamAddr         string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
 	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
@@ -91,6 +92,11 @@ func (a *App) Run() error {
 		return fmt.Errorf("failed setting up block store from url %q: %w", a.config.OneBlocksStoreURL, err)
 	}
 
+	forkedBlocksStore, err := dstore.NewDBinStore(a.config.ForkedBlocksStoreURL)
+	if err != nil {
+		return fmt.Errorf("failed setting up block store from url %q: %w", a.config.ForkedBlocksStoreURL, err)
+	}
+
 	withLive := a.config.BlockStreamAddr != ""
 
 	var forkableHub *hub.ForkableHub
@@ -138,7 +144,7 @@ func (a *App) Run() error {
 
 	streamFactory := firehose.NewStreamFactory(
 		mergedBlocksStore,
-		oneBlocksStore,
+		forkedBlocksStore,
 		forkableHub,
 		a.modules.TransformRegistry,
 	)
