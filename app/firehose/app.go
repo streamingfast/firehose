@@ -135,7 +135,7 @@ func (a *App) Run() error {
 			return src
 		})
 
-		forkableHub = hub.NewForkableHub(liveSourceFactory, oneBlocksSourceFactory, 100)
+		forkableHub = hub.NewForkableHub(liveSourceFactory, oneBlocksSourceFactory, 500)
 		forkableHub.InitialLiveSourceHeadNum = initialLiveHeadBlock // improve bootstrapping from blockstream directly
 		forkableHub.OnTerminated(a.Shutdown)
 
