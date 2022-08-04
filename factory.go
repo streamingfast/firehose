@@ -51,13 +51,20 @@ func (sf *StreamFactory) New(
 	request *pbfirehose.Request,
 	logger *zap.Logger) (*stream.Stream, error) {
 
+	reqLogger := logger.With(
+		zap.Int64("req_start_block", request.StartBlockNum),
+		zap.String("req_cursor", request.Cursor),
+		zap.Uint64("req_stop_block", request.StopBlockNum),
+		zap.Bool("final_blocks_only", request.FinalBlocksOnly),
+	)
+
 	options := []stream.Option{
 		stream.WithStopBlock(request.StopBlockNum),
 	}
 
 	preprocFunc, blockIndexProvider, desc, err := sf.transformRegistry.BuildFromTransforms(request.Transforms)
 	if err != nil {
-		logger.Error("cannot process incoming blocks request transforms", zap.Error(err))
+		reqLogger.Error("cannot process incoming blocks request transforms", zap.Error(err))
 		return nil, fmt.Errorf("building from transforms: %w", err)
 	}
 	if preprocFunc != nil {
@@ -66,13 +73,12 @@ func (sf *StreamFactory) New(
 		options = append(options, stream.WithPreprocessFunc(bstreamToProtocolPreprocFunc, StreamMergedBlocksPreprocThreads)) // decoding bstream in parallel, faster
 	}
 	if blockIndexProvider != nil {
-		logger = logger.With(zap.Bool("with_index_provider", true))
+		reqLogger = reqLogger.With(zap.Bool("with_index_provider", true))
 	}
 	if desc != "" {
-		logger = logger.With(zap.String("transform_desc", desc))
+		reqLogger = reqLogger.With(zap.String("transform_desc", desc))
 	}
-
-	options = append(options, stream.WithLogger(logger))
+	options = append(options, stream.WithLogger(logger)) // stream won't have the full reqLogger, use the traceID to connect them together
 
 	if blockIndexProvider != nil {
 		options = append(options, stream.WithBlockIndexProvider(blockIndexProvider))
@@ -82,7 +88,7 @@ func (sf *StreamFactory) New(
 		options = append(options, stream.WithFinalBlocksOnly())
 	}
 
-	logger.Info("processing incoming blocks request")
+	reqLogger.Info("processing incoming blocks request")
 
 	if request.Cursor != "" {
 		cur, err := bstream.CursorFromOpaque(request.Cursor)
