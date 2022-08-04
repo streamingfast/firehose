@@ -51,8 +51,6 @@ func (sf *StreamFactory) New(
 	request *pbfirehose.Request,
 	logger *zap.Logger) (*stream.Stream, error) {
 
-	logger = logger.With(zap.Reflect("req", request))
-
 	options := []stream.Option{
 		stream.WithStopBlock(request.StopBlockNum),
 	}
