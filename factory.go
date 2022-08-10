@@ -49,6 +49,7 @@ func (sf *StreamFactory) New(
 	ctx context.Context,
 	handler bstream.Handler,
 	request *pbfirehose.Request,
+	decodeBlock bool,
 	logger *zap.Logger) (*stream.Stream, error) {
 
 	reqLogger := logger.With(
@@ -69,7 +70,7 @@ func (sf *StreamFactory) New(
 	}
 	if preprocFunc != nil {
 		options = append(options, stream.WithPreprocessFunc(preprocFunc, StreamMergedBlocksPreprocThreads))
-	} else {
+	} else if decodeBlock {
 		options = append(options, stream.WithPreprocessFunc(bstreamToProtocolPreprocFunc, StreamMergedBlocksPreprocThreads)) // decoding bstream in parallel, faster
 	}
 	if blockIndexProvider != nil {

@@ -154,7 +154,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 	}
 
-	str, err := s.streamFactory.New(ctx, handlerFunc, request, logger)
+	str, err := s.streamFactory.New(ctx, handlerFunc, request, true, logger) // firehose always want decoded the blocks
 	if err != nil {
 		return err
 	}
