@@ -6,6 +6,7 @@ import (
 
 var Metricset = dmetrics.NewSet()
 
+var AppReadiness = Metricset.NewAppReadiness("firehose")
 var ActiveRequests = Metricset.NewGauge("firehose_active_requests", "Number of active requests")
 var RequestCounter = Metricset.NewCounter("firehose_requests_counter", "Request count")
 
