@@ -37,6 +37,9 @@ func (s *FirehoseProxyV1ToV2) Blocks(req *pbfirehoseV1.Request, streamSrv pbfire
 			(req.ForkSteps[1] == pbfirehoseV1.ForkStep_STEP_NEW && req.ForkSteps[0] == pbfirehoseV1.ForkStep_STEP_UNDO) {
 			validSteps = true
 			withUndo = true
+		} else if req.ForkSteps[0] == pbfirehoseV1.ForkStep_STEP_NEW && req.ForkSteps[1] == pbfirehoseV1.ForkStep_STEP_IRREVERSIBLE {
+			validSteps = true
+			// compatibility hack. you won't receive IRREVERSIBLE here
 		}
 	}
 	if !validSteps {
