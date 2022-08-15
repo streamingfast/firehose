@@ -29,14 +29,16 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 	ctx := streamSrv.Context()
 	logger := logging.Logger(ctx, s.logger)
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknown"
-		logger.Warn("cannot determine hostname, using 'unknown'", zap.Error(err))
-	}
-	md := metadata.New(map[string]string{"hostname": hostname})
-	if err := streamSrv.SendHeader(md); err != nil {
-		logger.Warn("cannot send metadata header", zap.Error(err))
+	if os.Getenv("FIREHOSE_SEND_HOSTNAME") != "" {
+		hostname, err := os.Hostname()
+		if err != nil {
+			hostname = "unknown"
+			logger.Warn("cannot determine hostname, using 'unknown'", zap.Error(err))
+		}
+		md := metadata.New(map[string]string{"hostname": hostname})
+		if err := streamSrv.SendHeader(md); err != nil {
+			logger.Warn("cannot send metadata header", zap.Error(err))
+		}
 	}
 
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
