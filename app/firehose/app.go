@@ -17,6 +17,7 @@ package firehose
 import (
 	"context"
 	"fmt"
+	"github.com/streamingfast/firehose/tracing"
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -148,6 +149,11 @@ func (a *App) Run() error {
 		forkableHub,
 		a.modules.TransformRegistry,
 	)
+
+	_, err = tracing.SetupTracing("substreams")
+	if err != nil {
+		return fmt.Errorf("failed setting up tracing: %w", err)
+	}
 
 	server := server.New(
 		a.modules.TransformRegistry,
