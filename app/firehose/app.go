@@ -17,7 +17,6 @@ package firehose
 import (
 	"context"
 	"fmt"
-	"github.com/streamingfast/firehose/tracing"
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -30,6 +29,7 @@ import (
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/metrics"
 	"github.com/streamingfast/firehose/server"
+	tracing "github.com/streamingfast/sf-tracing"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -150,9 +150,9 @@ func (a *App) Run() error {
 		a.modules.TransformRegistry,
 	)
 
-	_, err = tracing.SetupTracing("substreams")
+	err = tracing.SetupOpenTelemetry("substreams")
 	if err != nil {
-		return fmt.Errorf("failed setting up tracing: %w", err)
+		a.logger.Warn("failed to setup open telemetry", zap.Error(err))
 	}
 
 	server := server.New(

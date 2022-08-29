@@ -12,6 +12,8 @@ import (
 	"github.com/streamingfast/firehose"
 	pbfirehoseV1 "github.com/streamingfast/pbgo/sf/firehose/v1"
 	pbfirehoseV2 "github.com/streamingfast/pbgo/sf/firehose/v2"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -49,9 +51,12 @@ func New(
 		//////////////////////////////////////////////////////////////////////
 	})
 
+	tracerProvider := otel.GetTracerProvider()
 	options := []dgrpc.ServerOption{
 		dgrpc.WithLogger(logger),
 		dgrpc.WithHealthCheck(dgrpc.HealthCheckOverGRPC|dgrpc.HealthCheckOverHTTP, createHealthCheck(isReady)),
+		dgrpc.WithPostUnaryInterceptor(otelgrpc.UnaryServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
+		dgrpc.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 	}
 
 	if strings.Contains(listenAddr, "*") {

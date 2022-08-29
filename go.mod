@@ -2,31 +2,23 @@ module github.com/streamingfast/firehose
 
 go 1.18
 
-replace github.com/streamingfast/dgrpc => ../dgrpc
-
 require (
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.8.6
 	github.com/streamingfast/bstream v0.0.2-0.20220810182344-114d9f8705b2
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
-	github.com/streamingfast/dgrpc v0.0.0-20220301153539-536adf71b594
+	github.com/streamingfast/dgrpc v0.0.0-20220829125214-cfc425d39e84
 	github.com/streamingfast/dmetering v0.0.0-20220301165106-a642bb6a21bd
 	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
 	github.com/streamingfast/dstore v0.1.1-0.20220607202639-35118aeaf648
 	github.com/streamingfast/logging v0.0.0-20220304214715-bc750a74b424
 	github.com/streamingfast/pbgo v0.0.6-0.20220630154121-2e8bba36234e
+	github.com/streamingfast/sf-tracing v0.0.0-20220829120927-5a5d2e0fe525
 	github.com/streamingfast/shutter v1.5.0
-	go.opentelemetry.io/contrib/detectors/gcp v1.9.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.34.0
 	go.opentelemetry.io/otel v1.9.0
-	go.opentelemetry.io/otel/exporters/jaeger v1.9.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.9.0
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.9.0
-	go.opentelemetry.io/otel/exporters/zipkin v1.9.0
-	go.opentelemetry.io/otel/sdk v1.9.0
-	go.opentelemetry.io/otel/trace v1.9.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
-	google.golang.org/grpc v1.48.0
+	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.0
 )
 
@@ -42,6 +34,7 @@ require (
 	github.com/Azure/azure-pipeline-go v0.2.3 // indirect
 	github.com/Azure/azure-storage-blob-go v0.14.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v0.32.3 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.8.6 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.32.6 // indirect
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
@@ -86,9 +79,15 @@ require (
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.34.0 // indirect
+	go.opentelemetry.io/contrib/detectors/gcp v1.9.0 // indirect
+	go.opentelemetry.io/otel/exporters/jaeger v1.9.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.9.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.9.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.9.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.9.0 // indirect
+	go.opentelemetry.io/otel/exporters/zipkin v1.9.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.9.0 // indirect
+	go.opentelemetry.io/otel/trace v1.9.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.18.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
