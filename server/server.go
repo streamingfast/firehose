@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	_ "github.com/mostynb/go-grpc-compression/zstd"
 	"github.com/streamingfast/bstream/transform"
 	dauth "github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dgrpc"
@@ -12,6 +13,8 @@ import (
 	"github.com/streamingfast/firehose"
 	pbfirehoseV1 "github.com/streamingfast/pbgo/sf/firehose/v1"
 	pbfirehoseV2 "github.com/streamingfast/pbgo/sf/firehose/v2"
+	_ "google.golang.org/grpc/encoding/gzip"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
