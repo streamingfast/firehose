@@ -39,8 +39,9 @@ type Config struct {
 	MergedBlocksStoreURL    string
 	OneBlocksStoreURL       string
 	ForkedBlocksStoreURL    string
-	BlockStreamAddr         string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
-	GRPCListenAddr          string        // gRPC address where this app will listen to
+	BlockStreamAddr         string // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
+	GRPCListenAddr          string // gRPC address where this app will listen to
+	GRPCHealtListenAddr     string
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
 }
 
@@ -162,8 +163,12 @@ func (a *App) Run() error {
 		a.modules.Authenticator,
 		a.IsReady,
 		a.config.GRPCListenAddr,
+		a.config.GRPCHealtListenAddr,
 	)
-	a.OnTerminating(func(_ error) { server.Shutdown(a.config.GRPCShutdownGracePeriod) })
+
+	a.OnTerminating(func(_ error) {
+		server.Shutdown(a.config.GRPCShutdownGracePeriod)
+	})
 	server.OnTerminated(a.Shutdown)
 
 	if a.modules.RegisterServiceExtension != nil {
