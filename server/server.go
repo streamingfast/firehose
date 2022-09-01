@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/streamingfast/bstream/transform"
@@ -64,16 +62,6 @@ func New(
 
 	options = append(options, dgrpcxds.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
 
-	bootStrapFilename := os.Getenv("GRPC_XDS_BOOTSTRAP")
-	logger.Info("looked for GRPC_XDS_BOOTSTRAP", zap.String("filename", bootStrapFilename))
-
-	if bootStrapFilename != "" {
-		logger.Info("generating bootstrap file", zap.String("filename", bootStrapFilename))
-		err := dgrpcxds.GenerateBootstrapFile("trafficdirector.googleapis.com:443", bootStrapFilename)
-		if err != nil {
-			panic(fmt.Sprintf("failed to generate bootstrap file: %v", err))
-		}
-	}
 	grpcServer := dgrpcxds.NewServer(true, logger, options...)
 
 	s := &Server{
