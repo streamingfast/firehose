@@ -7,7 +7,8 @@ replace github.com/streamingfast/dgrpc => ../dgrpc
 replace github.com/streamingfast/bstream => ../bstream
 
 require (
-	github.com/streamingfast/bstream v0.0.2-0.20220810182344-114d9f8705b2
+	github.com/mostynb/go-grpc-compression v1.1.17
+	github.com/streamingfast/bstream v0.0.2-0.20220906182753-258f71638def
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
 	github.com/streamingfast/dgrpc v0.0.0-20220906142324-2cc2e94f153f
 	github.com/streamingfast/dmetering v0.0.0-20220301165106-a642bb6a21bd
@@ -68,7 +69,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
