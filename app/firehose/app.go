@@ -17,6 +17,7 @@ package firehose
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/streamingfast/bstream"
@@ -39,10 +40,10 @@ type Config struct {
 	MergedBlocksStoreURL    string
 	OneBlocksStoreURL       string
 	ForkedBlocksStoreURL    string
-	BlockStreamAddr         string // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
-	GRPCListenAddr          string // gRPC address where this app will listen to
-	GRPCHealtListenAddr     string
+	BlockStreamAddr         string        // gRPC endpoint to get real-time blocks, can be "" in which live streams is disabled
+	GRPCListenAddr          string        // gRPC address where this app will listen to
 	GRPCShutdownGracePeriod time.Duration // The duration we allow for gRPC connections to terminate gracefully prior forcing shutdown
+	ServiceDiscoveryURL     *url.URL
 }
 
 type RegisterServiceExtensionFunc func(firehoseServer *server.Server, streamFactory *firehose.StreamFactory, logger *zap.Logger)
@@ -61,7 +62,6 @@ type App struct {
 	config  *Config
 	modules *Modules
 	logger  *zap.Logger
-
 	isReady *atomic.Bool
 }
 
@@ -156,23 +156,23 @@ func (a *App) Run() error {
 		a.logger.Warn("failed to setup open telemetry", zap.Error(err))
 	}
 
-	server := server.New(
+	firehoseServer := server.New(
 		a.modules.TransformRegistry,
 		streamFactory,
 		a.logger,
 		a.modules.Authenticator,
 		a.IsReady,
 		a.config.GRPCListenAddr,
-		a.config.GRPCHealtListenAddr,
+		a.config.ServiceDiscoveryURL,
 	)
 
 	a.OnTerminating(func(_ error) {
-		server.Shutdown(a.config.GRPCShutdownGracePeriod)
+		firehoseServer.Shutdown(a.config.GRPCShutdownGracePeriod)
 	})
-	server.OnTerminated(a.Shutdown)
+	firehoseServer.OnTerminated(a.Shutdown)
 
 	if a.modules.RegisterServiceExtension != nil {
-		a.modules.RegisterServiceExtension(server, streamFactory, a.logger)
+		a.modules.RegisterServiceExtension(firehoseServer, streamFactory, a.logger)
 	}
 
 	go func() {
@@ -186,9 +186,9 @@ func (a *App) Run() error {
 			}
 		}
 
-		a.logger.Info("launching gRPC server", zap.Bool("live_support", withLive))
+		a.logger.Info("launching gRPC firehoseServer", zap.Bool("live_support", withLive))
 		a.isReady.CAS(false, true)
-		server.Launch()
+		firehoseServer.Launch()
 	}()
 
 	return nil

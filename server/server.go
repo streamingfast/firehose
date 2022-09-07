@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
+	"net/url"
 	"strings"
 
 	"github.com/streamingfast/bstream/transform"
 	dauth "github.com/streamingfast/dauth/authenticator"
-	"github.com/streamingfast/dgrpc"
-	dgrpcxds "github.com/streamingfast/dgrpc/xds"
+	dgrpcserver "github.com/streamingfast/dgrpc/server"
+	"github.com/streamingfast/dgrpc/server/factory"
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/firehose"
@@ -16,7 +17,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/xds"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,7 +27,7 @@ type Server struct {
 
 	postHookFunc func(context.Context, *pbfirehoseV2.Response)
 
-	*dgrpcxds.Server
+	dgrpcserver.Server
 	listenAddr       string
 	healthListenAddr string
 	logger           *zap.Logger
@@ -40,7 +41,7 @@ func New(
 	authenticator dauth.Authenticator,
 	isReady func(context.Context) bool,
 	listenAddr string,
-	healthListenAddr string,
+	serviceDiscoveryURL *url.URL,
 ) *Server {
 
 	postHookFunc := func(ctx context.Context, response *pbfirehoseV2.Response) {
@@ -55,28 +56,31 @@ func New(
 	}
 
 	tracerProvider := otel.GetTracerProvider()
-	options := []dgrpcxds.ServerOption{
-		dgrpcxds.WithUnaryInterceptor(otelgrpc.UnaryServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
-		dgrpcxds.WithStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
+	options := []dgrpcserver.Option{
+		dgrpcserver.WithLogger(logger),
+		dgrpcserver.WithHealthCheck(dgrpcserver.HealthCheckOverGRPC|dgrpcserver.HealthCheckOverHTTP, createHealthCheck(isReady)),
+		dgrpcserver.WithPostUnaryInterceptor(otelgrpc.UnaryServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
+		dgrpcserver.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
+	}
+	options = append(options, dgrpcserver.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
+
+	if serviceDiscoveryURL != nil {
+		options = append(options, dgrpcserver.WithServiceDiscoveryURL(serviceDiscoveryURL))
 	}
 
-	options = append(options, dgrpcxds.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
-
-	grpcServer := dgrpcxds.NewServer(true, logger, options...)
+	grpcServer := factory.ServerFromOptions(options...)
 
 	s := &Server{
 		Server:            grpcServer,
 		transformRegistry: transformRegistry,
 		streamFactory:     streamFactory,
 		listenAddr:        strings.ReplaceAll(listenAddr, "*", ""),
-		healthListenAddr:  strings.ReplaceAll(healthListenAddr, "*", ""),
-
-		postHookFunc: postHookFunc,
-		logger:       logger,
+		postHookFunc:      postHookFunc,
+		logger:            logger,
 	}
 
 	logger.Info("registering grpc services")
-	grpcServer.RegisterService(func(gs *xds.GRPCServer) {
+	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
 		pbfirehoseV2.RegisterStreamServer(gs, s)
 		pbfirehoseV1.RegisterStreamServer(gs, NewFirehoseProxyV1ToV2(s)) // compatibility with firehose
 	})
@@ -85,10 +89,10 @@ func New(
 }
 
 func (s *Server) Launch() {
-	s.Server.Launch(s.listenAddr, s.healthListenAddr)
+	s.Server.Launch(s.listenAddr)
 }
 
-func createHealthCheck(isReady func(ctx context.Context) bool) dgrpc.HealthCheck {
+func createHealthCheck(isReady func(ctx context.Context) bool) dgrpcserver.HealthCheck {
 	return func(ctx context.Context) (bool, interface{}, error) {
 		return isReady(ctx), nil, nil
 	}
