@@ -71,6 +71,12 @@ func New(
 		options = append(options, dgrpcserver.WithServiceDiscoveryURL(serviceDiscoveryURL))
 	}
 
+	if strings.Contains(listenAddr, "*") {
+		options = append(options, dgrpcserver.WithInsecureServer())
+	} else {
+		options = append(options, dgrpcserver.WithPlainTextServer())
+	}
+
 	grpcServer := factory.ServerFromOptions(options...)
 
 	s := &Server{
