@@ -2,10 +2,6 @@ module github.com/streamingfast/firehose
 
 go 1.18
 
-replace github.com/streamingfast/dgrpc => ../dgrpc
-
-replace github.com/streamingfast/bstream => ../bstream
-
 require (
 	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/streamingfast/bstream v0.0.2-0.20220906182753-258f71638def
