@@ -25,6 +25,7 @@ import (
 	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/bstream/transform"
 	dauth "github.com/streamingfast/dauth/authenticator"
+	dgrpcserver "github.com/streamingfast/dgrpc/server"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/firehose"
@@ -46,7 +47,11 @@ type Config struct {
 	ServiceDiscoveryURL     *url.URL
 }
 
-type RegisterServiceExtensionFunc func(firehoseServer *server.Server, streamFactory *firehose.StreamFactory, logger *zap.Logger)
+type RegisterServiceExtensionFunc func(server dgrpcserver.Server,
+	mergedBlocksStore dstore.Store,
+	forkedBlocksStore dstore.Store,
+	forkableHub *hub.ForkableHub,
+	logger *zap.Logger)
 
 type Modules struct {
 	// Required dependencies
@@ -161,7 +166,12 @@ func (a *App) Run() error {
 	firehoseServer.OnTerminated(a.Shutdown)
 
 	if a.modules.RegisterServiceExtension != nil {
-		a.modules.RegisterServiceExtension(firehoseServer, streamFactory, a.logger)
+		a.modules.RegisterServiceExtension(
+			firehoseServer.Server,
+			mergedBlocksStore,
+			forkedBlocksStore,
+			forkableHub,
+			a.logger)
 	}
 
 	go func() {
