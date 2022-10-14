@@ -4,14 +4,14 @@ go 1.18
 
 require (
 	github.com/mostynb/go-grpc-compression v1.1.17
-	github.com/streamingfast/bstream v0.0.2-0.20220909121429-4647fd1522c9
+	github.com/streamingfast/bstream v0.0.2-0.20221014191842-3e9071c1d4dd
 	github.com/streamingfast/dauth v0.0.0-20210812020920-1c83ba29add1
 	github.com/streamingfast/dgrpc v0.0.0-20220909121013-162e9305bbfc
 	github.com/streamingfast/dmetering v0.0.0-20220301165106-a642bb6a21bd
 	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
 	github.com/streamingfast/dstore v0.1.1-0.20220607202639-35118aeaf648
 	github.com/streamingfast/logging v0.0.0-20220304214715-bc750a74b424
-	github.com/streamingfast/pbgo v0.0.6-0.20220630154121-2e8bba36234e
+	github.com/streamingfast/pbgo v0.0.6-0.20221014191646-3a05d7bc30c8
 	github.com/streamingfast/sf-tracing v0.0.0-20220829120927-5a5d2e0fe525
 	github.com/streamingfast/shutter v1.5.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.34.0

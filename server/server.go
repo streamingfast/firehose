@@ -27,6 +27,7 @@ import (
 type Server struct {
 	streamFactory     *firehose.StreamFactory
 	transformRegistry *transform.Registry
+	blockGetter       *firehose.BlockGetter
 
 	postHookFunc func(context.Context, *pbfirehoseV2.Response)
 
@@ -90,6 +91,7 @@ func New(
 
 	logger.Info("registering grpc services")
 	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
+		pbfirehoseV2.RegisterFetchServer(gs, s)
 		pbfirehoseV2.RegisterStreamServer(gs, s)
 		pbfirehoseV1.RegisterStreamServer(gs, NewFirehoseProxyV1ToV2(s)) // compatibility with firehose
 	})

@@ -21,6 +21,42 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+func (s Server) Block(ctx context.Context, request *pbfirehose.SingleBlockRequest) (*pbfirehose.SingleBlockResponse, error) {
+	var blockNum uint64
+	var blockHash string
+	switch ref := request.Reference.(type) {
+	case *pbfirehose.SingleBlockRequest_BlockHashAndNumber_:
+		blockNum = ref.BlockHashAndNumber.Num
+		blockHash = ref.BlockHashAndNumber.Hash
+	case *pbfirehose.SingleBlockRequest_Cursor_:
+		cur, err := bstream.CursorFromOpaque(ref.Cursor.Cursor)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		blockNum = cur.Block.Num()
+		blockHash = cur.Block.ID()
+	case *pbfirehose.SingleBlockRequest_BlockNumber_:
+		blockNum = ref.BlockNumber.Num
+	}
+
+	blk, err := s.blockGetter.Get(ctx, blockNum, blockHash, s.logger)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if blk == nil {
+		return nil, status.Errorf(codes.NotFound, "block %s not found", bstream.NewBlockRef(blockHash, blockNum))
+	}
+
+	protoBlock, err := anypb.New(blk.ToProtocol().(proto.Message))
+	if err != nil {
+		return nil, fmt.Errorf("to any: %w", err)
+	}
+
+	return &pbfirehose.SingleBlockResponse{
+		Block: protoBlock,
+	}, nil
+}
+
 func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_BlocksServer) error {
 	metrics.ActiveRequests.Inc()
 	metrics.RequestCounter.Inc()

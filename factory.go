@@ -24,6 +24,47 @@ var bstreamToProtocolPreprocFunc = func(blk *bstream.Block) (interface{}, error)
 	return blk.ToProtocol(), nil
 }
 
+type BlockGetter struct {
+	mergedBlocksStore dstore.Store
+	forkedBlocksStore dstore.Store
+	hub               *hub.ForkableHub
+}
+
+func (g *BlockGetter) Get(
+	ctx context.Context,
+	num uint64,
+	id string,
+	logger *zap.Logger) (out *bstream.Block, err error) {
+
+	reqLogger := logger.With(
+		zap.Uint64("num", num),
+		zap.String("id", id),
+	)
+
+	if num > g.hub.LowestBlockNum() {
+		if blk := g.hub.GetBlock(num, id); out != nil {
+			reqLogger.Info("single block request", zap.String("source", "hub"), zap.Bool("found", true))
+			return blk, nil
+		}
+		reqLogger.Info("single block request", zap.String("source", "hub"), zap.Bool("found", false))
+		return nil, status.Error(codes.NotFound, "live block not found in hub")
+	}
+
+	if blk, _ := bstream.FetchBlockFromMergedBlocksStore(ctx, num, g.mergedBlocksStore); blk != nil {
+		if blk.Id == id {
+			reqLogger.Info("single block request", zap.String("source", "merged_blocks"), zap.Bool("found", true))
+			return blk, nil
+		}
+	}
+
+	if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, g.forkedBlocksStore); blk != nil {
+		reqLogger.Info("single block request", zap.String("source", "forked_blocks"), zap.Bool("found", true))
+	}
+
+	reqLogger.Info("single block request", zap.Bool("found", false))
+	return nil, status.Error(codes.NotFound, "block not found in files")
+}
+
 type StreamFactory struct {
 	mergedBlocksStore dstore.Store
 	forkedBlocksStore dstore.Store
