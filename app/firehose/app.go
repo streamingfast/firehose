@@ -145,6 +145,7 @@ func (a *App) Run() error {
 		a.modules.TransformRegistry,
 	)
 
+	blockGetter := firehose.NewBlockGetter(mergedBlocksStore, forkedBlocksStore, forkableHub)
 	err = tracing.SetupOpenTelemetry("substreams")
 	if err != nil {
 		a.logger.Warn("failed to setup open telemetry", zap.Error(err))
@@ -153,6 +154,7 @@ func (a *App) Run() error {
 	firehoseServer := server.New(
 		a.modules.TransformRegistry,
 		streamFactory,
+		blockGetter,
 		a.logger,
 		a.modules.Authenticator,
 		a.IsReady,

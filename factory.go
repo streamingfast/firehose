@@ -30,18 +30,30 @@ type BlockGetter struct {
 	hub               *hub.ForkableHub
 }
 
+func NewBlockGetter(
+	mergedBlocksStore dstore.Store,
+	forkedBlocksStore dstore.Store,
+	hub *hub.ForkableHub,
+) *BlockGetter {
+	return &BlockGetter{
+		mergedBlocksStore: mergedBlocksStore,
+		forkedBlocksStore: forkedBlocksStore,
+		hub:               hub,
+	}
+}
 func (g *BlockGetter) Get(
 	ctx context.Context,
 	num uint64,
 	id string,
 	logger *zap.Logger) (out *bstream.Block, err error) {
 
+	id = bstream.NormalizeBlockID(id)
 	reqLogger := logger.With(
 		zap.Uint64("num", num),
 		zap.String("id", id),
 	)
 
-	if num > g.hub.LowestBlockNum() {
+	if g.hub != nil && num > g.hub.LowestBlockNum() {
 		if blk := g.hub.GetBlock(num, id); out != nil {
 			reqLogger.Info("single block request", zap.String("source", "hub"), zap.Bool("found", true))
 			return blk, nil
@@ -51,7 +63,7 @@ func (g *BlockGetter) Get(
 	}
 
 	if blk, _ := bstream.FetchBlockFromMergedBlocksStore(ctx, num, g.mergedBlocksStore); blk != nil {
-		if blk.Id == id {
+		if id == "" || blk.Id == id {
 			reqLogger.Info("single block request", zap.String("source", "merged_blocks"), zap.Bool("found", true))
 			return blk, nil
 		}
@@ -59,6 +71,7 @@ func (g *BlockGetter) Get(
 
 	if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, g.forkedBlocksStore); blk != nil {
 		reqLogger.Info("single block request", zap.String("source", "forked_blocks"), zap.Bool("found", true))
+		return blk, nil
 	}
 
 	reqLogger.Info("single block request", zap.Bool("found", false))
