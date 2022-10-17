@@ -54,7 +54,7 @@ func (g *BlockGetter) Get(
 	)
 
 	if g.hub != nil && num > g.hub.LowestBlockNum() {
-		if blk := g.hub.GetBlock(num, id); out != nil {
+		if blk := g.hub.GetBlock(num, id); blk != nil {
 			reqLogger.Info("single block request", zap.String("source", "hub"), zap.Bool("found", true))
 			return blk, nil
 		}
