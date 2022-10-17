@@ -46,3 +46,34 @@ func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainT
 
 	return
 }
+
+func NewFirehoseFetchClient(endpoint, jwt string, useInsecureTSLConnection, usePlainTextConnection bool) (cli pbfirehose.FetchClient, closeFunc func() error, callOpts []grpc.CallOption, err error) {
+	skipAuth := jwt == ""
+
+	if useInsecureTSLConnection && usePlainTextConnection {
+		return nil, nil, nil, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
+	}
+
+	var dialOptions []grpc.DialOption
+	switch {
+	case usePlainTextConnection:
+		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	case useInsecureTSLConnection:
+		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
+	}
+
+	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("unable to create external gRPC client")
+	}
+	closeFunc = conn.Close
+	cli = pbfirehose.NewFetchClient(conn)
+
+	if !skipAuth {
+		credentials := oauth.NewOauthAccess(&oauth2.Token{AccessToken: jwt, TokenType: "Bearer"})
+		callOpts = append(callOpts, grpc.PerRPCCredentials(credentials))
+	}
+
+	return
+}
