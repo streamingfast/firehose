@@ -22,6 +22,8 @@ import (
 )
 
 func (s Server) Block(ctx context.Context, request *pbfirehose.SingleBlockRequest) (*pbfirehose.SingleBlockResponse, error) {
+	met, _ := metadata.FromIncomingContext(ctx)
+	fmt.Println("metadata:", met)
 	var blockNum uint64
 	var blockHash string
 	switch ref := request.Reference.(type) {
