@@ -69,9 +69,12 @@ func (g *BlockGetter) Get(
 		}
 	}
 
-	if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, g.forkedBlocksStore); blk != nil {
-		reqLogger.Info("single block request", zap.String("source", "forked_blocks"), zap.Bool("found", true))
-		return blk, nil
+	// check for nil forkedBlocksStore
+	if g.forkedBlocksStore != nil {
+		if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, g.forkedBlocksStore); blk != nil {
+			reqLogger.Info("single block request", zap.String("source", "forked_blocks"), zap.Bool("found", true))
+			return blk, nil
+		}
 	}
 
 	reqLogger.Info("single block request", zap.Bool("found", false))

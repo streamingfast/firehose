@@ -49,7 +49,7 @@ type Config struct {
 
 type RegisterServiceExtensionFunc func(server dgrpcserver.Server,
 	mergedBlocksStore dstore.Store,
-	forkedBlocksStore dstore.Store,
+	forkedBlocksStore dstore.Store, // this can be nil here
 	forkableHub *hub.ForkableHub,
 	logger *zap.Logger)
 
@@ -99,9 +99,13 @@ func (a *App) Run() error {
 		return fmt.Errorf("failed setting up block store from url %q: %w", a.config.OneBlocksStoreURL, err)
 	}
 
-	forkedBlocksStore, err := dstore.NewDBinStore(a.config.ForkedBlocksStoreURL)
-	if err != nil {
-		return fmt.Errorf("failed setting up block store from url %q: %w", a.config.ForkedBlocksStoreURL, err)
+	// set to empty store interface if URL is ""
+	var forkedBlocksStore dstore.Store
+	if a.config.ForkedBlocksStoreURL != "" {
+		forkedBlocksStore, err = dstore.NewDBinStore(a.config.ForkedBlocksStoreURL)
+		if err != nil {
+			return fmt.Errorf("failed setting up block store from url %q: %w", a.config.ForkedBlocksStoreURL, err)
+		}
 	}
 
 	withLive := a.config.BlockStreamAddr != ""
