@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 	"strings"
+	"time"
 
 	_ "github.com/mostynb/go-grpc-compression/zstd"
 	"github.com/streamingfast/bstream/transform"
@@ -13,6 +14,7 @@ import (
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/firehose"
+	"github.com/streamingfast/firehose/rate"
 	pbfirehoseV1 "github.com/streamingfast/pbgo/sf/firehose/v1"
 	pbfirehoseV2 "github.com/streamingfast/pbgo/sf/firehose/v2"
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -36,6 +38,16 @@ type Server struct {
 	healthListenAddr string
 	logger           *zap.Logger
 	metrics          dmetrics.Set
+
+	rateLimiter rate.Limiter
+}
+
+type Option func(*Server)
+
+func WithLeakyBucketLimiter(size int, dripRate time.Duration) Option {
+	return func(s *Server) {
+		s.rateLimiter = rate.NewLeakyBucketLimiter(size, dripRate)
+	}
 }
 
 func New(
@@ -47,6 +59,7 @@ func New(
 	isReady func(context.Context) bool,
 	listenAddr string,
 	serviceDiscoveryURL *url.URL,
+	opts ...Option,
 ) *Server {
 
 	postHookFunc := func(ctx context.Context, response *pbfirehoseV2.Response) {
@@ -100,6 +113,10 @@ func New(
 		pbfirehoseV2.RegisterStreamServer(gs, s)
 		pbfirehoseV1.RegisterStreamServer(gs, NewFirehoseProxyV1ToV2(s)) // compatibility with firehose
 	})
+
+	for _, opt := range opts {
+		opt(s)
+	}
 
 	return s
 }

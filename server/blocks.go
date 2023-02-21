@@ -58,12 +58,26 @@ func (s Server) Block(ctx context.Context, request *pbfirehose.SingleBlockReques
 }
 
 func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_BlocksServer) error {
-	metrics.ActiveRequests.Inc()
-	metrics.RequestCounter.Inc()
-	defer metrics.ActiveRequests.Dec()
-
 	ctx := streamSrv.Context()
+	metrics.RequestCounter.Inc()
+
 	logger := logging.Logger(ctx, s.logger)
+
+	if s.rateLimiter != nil {
+		logger = logger.With(zap.Stringer("rate_limiter", s.rateLimiter))
+
+		rlCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+
+		if allow := s.rateLimiter.Take(rlCtx, "", "Blocks"); !allow {
+			return status.Error(codes.Unavailable, "rate limit exceeded")
+		} else {
+			defer s.rateLimiter.Return()
+		}
+	}
+
+	metrics.ActiveRequests.Inc()
+	defer metrics.ActiveRequests.Dec()
 
 	if os.Getenv("FIREHOSE_SEND_HOSTNAME") != "" {
 		hostname, err := os.Hostname()
