@@ -70,6 +70,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		defer cancel()
 
 		if allow := s.rateLimiter.Take(rlCtx, "", "Blocks"); !allow {
+			<-time.After(time.Millisecond * 500) // force a minimal backoff
 			return status.Error(codes.Unavailable, "rate limit exceeded")
 		} else {
 			defer s.rateLimiter.Return()
