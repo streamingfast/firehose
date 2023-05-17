@@ -31,7 +31,6 @@ import (
 	"github.com/streamingfast/firehose"
 	"github.com/streamingfast/firehose/metrics"
 	"github.com/streamingfast/firehose/server"
-	tracing "github.com/streamingfast/sf-tracing"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -151,10 +150,6 @@ func (a *App) Run() error {
 	)
 
 	blockGetter := firehose.NewBlockGetter(mergedBlocksStore, forkedBlocksStore, forkableHub)
-	err = tracing.SetupOpenTelemetry("substreams")
-	if err != nil {
-		a.logger.Warn("failed to setup open telemetry", zap.Error(err))
-	}
 
 	firehoseServer := server.New(
 		a.modules.TransformRegistry,
