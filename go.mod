@@ -83,7 +83,7 @@ require (
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a // indirect
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308 // indirect
-	github.com/streamingfast/sf-tracing v0.0.0-20230518173934-07a78a90432e // indirect
+	github.com/streamingfast/sf-tracing v0.0.0-20230519113358-f3dc5e582d12 // indirect
 	github.com/stretchr/testify v1.8.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.9.0 // indirect

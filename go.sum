@@ -454,6 +454,8 @@ github.com/streamingfast/pbgo v0.0.6-0.20221014191646-3a05d7bc30c8 h1:tz5y88t3tV
 github.com/streamingfast/pbgo v0.0.6-0.20221014191646-3a05d7bc30c8/go.mod h1:huKwfgTGFIFZMKSVbD5TywClM7zAeBUG/zePZMqvXQQ=
 github.com/streamingfast/sf-tracing v0.0.0-20230518173934-07a78a90432e h1:O6KUSWGVFXgRIteKjxotWJEhaD/NDMpQsbXBHHQpY5c=
 github.com/streamingfast/sf-tracing v0.0.0-20230518173934-07a78a90432e/go.mod h1:Apcb4QwMpbFurrJQEIwz2LtQQZNMYkSO0IuZu1lGM8k=
+github.com/streamingfast/sf-tracing v0.0.0-20230519113358-f3dc5e582d12 h1:qdzKCVI7pi5UaxONGhDE92x4lmIYttzv8FxqOpOfA4A=
+github.com/streamingfast/sf-tracing v0.0.0-20230519113358-f3dc5e582d12/go.mod h1:Apcb4QwMpbFurrJQEIwz2LtQQZNMYkSO0IuZu1lGM8k=
 github.com/streamingfast/shutter v1.5.0 h1:NpzDYzj0HVpSiDJVO/FFSL6QIK/YKOxY0gJAtyaTOgs=
 github.com/streamingfast/shutter v1.5.0/go.mod h1:B/T6efqdeMGbGwjzPS1ToXzYZI4kDzI5/u4I+7qbjY8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
