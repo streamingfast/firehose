@@ -221,10 +221,14 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		}
 
 		if errors.Is(err, context.Canceled) {
+			if ctx.Err() != context.Canceled {
+				logger.Debug("stream of blocks ended with context canceled, but our own context was not canceled", zap.Error(err))
+			}
 			return status.Error(codes.Canceled, "source canceled")
 		}
 
 		if errors.Is(err, context.DeadlineExceeded) {
+			logger.Info("stream of blocks ended with context deadline exceeded", zap.Error(err))
 			return status.Error(codes.DeadlineExceeded, "source deadline exceeded")
 		}
 

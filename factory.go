@@ -157,9 +157,27 @@ func (sf *StreamFactory) New(
 		options = append(options, stream.WithCursor(cur))
 	}
 
+	forkedBlocksStore := sf.forkedBlocksStore
+	if clonable, ok := forkedBlocksStore.(dstore.Clonable); ok {
+		var err error
+		forkedBlocksStore, err = clonable.Clone(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	mergedBlocksStore := sf.mergedBlocksStore
+	if clonable, ok := mergedBlocksStore.(dstore.Clonable); ok {
+		var err error
+		mergedBlocksStore, err = clonable.Clone(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	str := stream.New(
-		sf.forkedBlocksStore,
-		sf.mergedBlocksStore,
+		forkedBlocksStore,
+		mergedBlocksStore,
 		sf.hub,
 		request.StartBlockNum,
 		handler,
