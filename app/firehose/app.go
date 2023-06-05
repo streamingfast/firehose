@@ -60,6 +60,7 @@ type Modules struct {
 	HeadBlockNumberMetric    *dmetrics.HeadBlockNum
 	TransformRegistry        *transform.Registry
 	RegisterServiceExtension RegisterServiceExtensionFunc
+	CheckPendingShutdown     func() bool
 }
 
 type App struct {
@@ -200,6 +201,9 @@ func (a *App) Run() error {
 // otherwise.
 func (a *App) IsReady(ctx context.Context) bool {
 	if a.IsTerminating() {
+		return false
+	}
+	if a.modules.CheckPendingShutdown != nil && a.modules.CheckPendingShutdown() {
 		return false
 	}
 
