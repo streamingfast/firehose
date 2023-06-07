@@ -60,7 +60,7 @@ func (p *BlocksPipe) Recv() (*pbfirehose.Response, error) {
 	}
 }
 
-func (s Server) BlocksFromLocal(ctx context.Context, req *pbfirehose.Request) pbfirehose.Stream_BlocksClient {
+func (s *Server) BlocksFromLocal(ctx context.Context, req *pbfirehose.Request) pbfirehose.Stream_BlocksClient {
 	cctx, cancel := context.WithCancel(ctx)
 
 	pipe := &BlocksPipe{

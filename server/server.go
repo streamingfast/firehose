@@ -17,12 +17,11 @@ import (
 	"github.com/streamingfast/firehose/rate"
 	pbfirehoseV1 "github.com/streamingfast/pbgo/sf/firehose/v1"
 	pbfirehoseV2 "github.com/streamingfast/pbgo/sf/firehose/v2"
-	_ "google.golang.org/grpc/encoding/gzip"
-
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -31,6 +30,7 @@ type Server struct {
 	transformRegistry *transform.Registry
 	blockGetter       *firehose.BlockGetter
 
+	initFunc     func(context.Context, *pbfirehoseV2.Request) context.Context
 	postHookFunc func(context.Context, *pbfirehoseV2.Response)
 
 	dgrpcserver.Server
@@ -61,6 +61,13 @@ func New(
 	serviceDiscoveryURL *url.URL,
 	opts ...Option,
 ) *Server {
+	initFunc := func(ctx context.Context, request *pbfirehoseV2.Request) context.Context {
+		//////////////////////////////////////////////////////////////////////
+		meter := dmetering.NewBytesMeter()
+		ctx = dmetering.SetBytesMeter(ctx, meter)
+		return ctx
+		//////////////////////////////////////////////////////////////////////
+	}
 
 	postHookFunc := func(ctx context.Context, response *pbfirehoseV2.Response) {
 		//////////////////////////////////////////////////////////////////////
@@ -69,6 +76,18 @@ func New(
 			Kind:        "gRPC Stream",
 			Method:      "Blocks",
 			EgressBytes: int64(proto.Size(response)),
+		}, ctx)
+
+		meter := dmetering.MustGetBytesMeter(ctx)
+		bytesRead := meter.BytesReadDelta()
+		bytesWritten := meter.BytesWrittenDelta()
+
+		dmetering.EmitWithContext(dmetering.Event{
+			Source:       "firehose",
+			Kind:         "store",
+			Method:       "Blocks",
+			EgressBytes:  int64(bytesRead),
+			IngressBytes: int64(bytesWritten),
 		}, ctx)
 		//////////////////////////////////////////////////////////////////////
 	}
@@ -101,6 +120,7 @@ func New(
 		blockGetter:       blockGetter,
 		streamFactory:     streamFactory,
 		listenAddr:        strings.ReplaceAll(listenAddr, "*", ""),
+		initFunc:          initFunc,
 		postHookFunc:      postHookFunc,
 		logger:            logger,
 	}

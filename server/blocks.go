@@ -21,7 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s Server) Block(ctx context.Context, request *pbfirehose.SingleBlockRequest) (*pbfirehose.SingleBlockResponse, error) {
+func (s *Server) Block(ctx context.Context, request *pbfirehose.SingleBlockRequest) (*pbfirehose.SingleBlockResponse, error) {
 	var blockNum uint64
 	var blockHash string
 	switch ref := request.Reference.(type) {
@@ -57,7 +57,7 @@ func (s Server) Block(ctx context.Context, request *pbfirehose.SingleBlockReques
 	}, nil
 }
 
-func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_BlocksServer) error {
+func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_BlocksServer) error {
 	ctx := streamSrv.Context()
 	metrics.RequestCounter.Inc()
 
@@ -207,6 +207,7 @@ func (s Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream_
 		return status.Errorf(codes.Unimplemented, "no transforms registry configured within this instance")
 	}
 
+	ctx = s.initFunc(ctx, request)
 	str, err := s.streamFactory.New(ctx, handlerFunc, request, true, logger) // firehose always want decoded the blocks
 	if err != nil {
 		return err

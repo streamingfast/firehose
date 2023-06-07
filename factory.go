@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/streamingfast/dmetering"
+
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/bstream/stream"
@@ -164,6 +166,7 @@ func (sf *StreamFactory) New(
 		if err != nil {
 			return nil, err
 		}
+		forkedBlocksStore.SetMeter(dmetering.MustGetBytesMeter(ctx))
 	}
 
 	mergedBlocksStore := sf.mergedBlocksStore
@@ -173,6 +176,7 @@ func (sf *StreamFactory) New(
 		if err != nil {
 			return nil, err
 		}
+		mergedBlocksStore.SetMeter(dmetering.MustGetBytesMeter(ctx))
 	}
 
 	str := stream.New(
