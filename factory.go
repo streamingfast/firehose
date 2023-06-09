@@ -166,7 +166,7 @@ func (sf *StreamFactory) New(
 		if err != nil {
 			return nil, err
 		}
-		forkedBlocksStore.SetMeter(dmetering.MustGetBytesMeter(ctx))
+		forkedBlocksStore.SetMeter(dmetering.GetBytesMeter(ctx))
 	}
 
 	mergedBlocksStore := sf.mergedBlocksStore
@@ -176,7 +176,7 @@ func (sf *StreamFactory) New(
 		if err != nil {
 			return nil, err
 		}
-		mergedBlocksStore.SetMeter(dmetering.MustGetBytesMeter(ctx))
+		mergedBlocksStore.SetMeter(dmetering.GetBytesMeter(ctx))
 	}
 
 	str := stream.New(

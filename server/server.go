@@ -64,31 +64,30 @@ func New(
 	initFunc := func(ctx context.Context, request *pbfirehoseV2.Request) context.Context {
 		//////////////////////////////////////////////////////////////////////
 		meter := dmetering.NewBytesMeter()
-		ctx = dmetering.SetBytesMeter(ctx, meter)
+		ctx = dmetering.WithBytesMeter(ctx, meter)
 		return ctx
 		//////////////////////////////////////////////////////////////////////
 	}
 
 	postHookFunc := func(ctx context.Context, response *pbfirehoseV2.Response) {
 		//////////////////////////////////////////////////////////////////////
-		dmetering.EmitWithContext(dmetering.Event{
-			Source:      "firehose",
-			Kind:        "gRPC Stream",
-			Method:      "Blocks",
-			EgressBytes: int64(proto.Size(response)),
-		}, ctx)
-
-		meter := dmetering.MustGetBytesMeter(ctx)
+		meter := dmetering.GetBytesMeter(ctx)
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
 
-		dmetering.EmitWithContext(dmetering.Event{
-			Source:       "firehose",
-			Kind:         "store",
-			Method:       "Blocks",
-			EgressBytes:  int64(bytesRead),
-			IngressBytes: int64(bytesWritten),
-		}, ctx)
+		dmetering.EmitWithContext(
+			dmetering.Event{
+				Service: "firehose",
+				Method:  "Blocks",
+				Metadata: map[string]string{
+					"protocol": "grpc",
+				},
+				EgressBytes:  float64(proto.Size(response)),
+				WrittenBytes: float64(bytesWritten),
+				ReadBytes:    float64(bytesRead),
+			},
+			ctx,
+		)
 		//////////////////////////////////////////////////////////////////////
 	}
 
