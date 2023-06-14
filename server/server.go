@@ -63,8 +63,7 @@ func New(
 ) *Server {
 	initFunc := func(ctx context.Context, request *pbfirehoseV2.Request) context.Context {
 		//////////////////////////////////////////////////////////////////////
-		meter := dmetering.NewBytesMeter()
-		ctx = dmetering.WithBytesMeter(ctx, meter)
+		ctx = dmetering.WithBytesMeter(ctx)
 		return ctx
 		//////////////////////////////////////////////////////////////////////
 	}
@@ -75,19 +74,20 @@ func New(
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
 
-		dmetering.EmitWithContext(
+		err := dmetering.Emit(ctx,
 			dmetering.Event{
-				Service: "firehose",
-				Method:  "Blocks",
-				Metadata: map[string]string{
-					"protocol": "grpc",
+				Service: "Blocks",
+				Metrics: map[string]float64{
+					"egress_bytes":  float64(proto.Size(response)),
+					"written_bytes": float64(bytesWritten),
+					"read_bytes":    float64(bytesRead),
 				},
-				EgressBytes:  float64(proto.Size(response)),
-				WrittenBytes: float64(bytesWritten),
-				ReadBytes:    float64(bytesRead),
+				Timestamp: time.Now(),
 			},
-			ctx,
 		)
+		if err != nil {
+			logger.Warn("unable to emit metrics event", zap.Error(err))
+		}
 		//////////////////////////////////////////////////////////////////////
 	}
 
@@ -99,7 +99,7 @@ func New(
 		dgrpcserver.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithGRPCServerOptions(grpc.MaxRecvMsgSize(25 * 1024 * 1024)),
 	}
-	options = append(options, dgrpcserver.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
+	//options = append(options, dgrpcserver.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
 
 	if serviceDiscoveryURL != nil {
 		options = append(options, dgrpcserver.WithServiceDiscoveryURL(serviceDiscoveryURL))
