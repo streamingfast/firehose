@@ -76,7 +76,7 @@ func New(
 
 		err := dmetering.Emit(ctx,
 			dmetering.Event{
-				Service: "Blocks",
+				Endpoint: "sf.firehose.v2.Firehose/Blocks",
 				Metrics: map[string]float64{
 					"egress_bytes":  float64(proto.Size(response)),
 					"written_bytes": float64(bytesWritten),
