@@ -397,12 +397,16 @@ github.com/streamingfast/bstream v0.0.2-0.20221017131819-2a7e38be1047 h1:BExIqX4
 github.com/streamingfast/bstream v0.0.2-0.20221017131819-2a7e38be1047/go.mod h1:Njkx972HcZiz0djWBylxqO/eq686eDGr+egQ1lePj3Q=
 github.com/streamingfast/dauth v0.0.0-20230616111612-a1f92d641c59 h1:gtWbQYqqnAkxpPAaz3gNenEk+4eVY5jagdiHGUkEXSs=
 github.com/streamingfast/dauth v0.0.0-20230616111612-a1f92d641c59/go.mod h1:H9zF2Nclmw0Ocz0L0ry5XSH44qlxss0+OBw2SCRrlvo=
+github.com/streamingfast/dauth v0.0.0-20230616141648-9cb3b379dc5b h1:e7G5oDJafjRtw4W/kPLPDseQO2e3rtWasOL0EV3+ANA=
+github.com/streamingfast/dauth v0.0.0-20230616141648-9cb3b379dc5b/go.mod h1:H9zF2Nclmw0Ocz0L0ry5XSH44qlxss0+OBw2SCRrlvo=
 github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 h1:m/3aIPNXCwZ9m/dfYdOs8ftrS7GJl82ipVr6K2aZiBs=
 github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5/go.mod h1:YStE7K5/GH47JsWpY7LMKsDaXXpMLU/M26vYFzXHYRk=
 github.com/streamingfast/dgrpc v0.0.0-20230612194237-65f8aded563b h1:ARrUyi64RlpNT1R2YsSHYDomO9P+S5Qw9xb/eGwPok4=
 github.com/streamingfast/dgrpc v0.0.0-20230612194237-65f8aded563b/go.mod h1:e0CV14wi/p11xLBcIZgPIyBxy7CcQTqX2498DuQQHTg=
 github.com/streamingfast/dmetering v0.0.0-20230615180916-dc7b78448003 h1:XmiWnbnZeJn4ZcY3FAaFDAurX7I0lvGjVvzOZmcdTKY=
 github.com/streamingfast/dmetering v0.0.0-20230615180916-dc7b78448003/go.mod h1:fIkrfHl+yZfoQUstqGPDFruzd7cwWSO0HeXsE6WsJbM=
+github.com/streamingfast/dmetering v0.0.0-20230616141703-390a8b480271 h1:/5uCL3tCigEIzpuMOkBj+RtNlVcOKXoNXLHa/Xq8Fr4=
+github.com/streamingfast/dmetering v0.0.0-20230616141703-390a8b480271/go.mod h1:fIkrfHl+yZfoQUstqGPDFruzd7cwWSO0HeXsE6WsJbM=
 github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c h1:ln4WzAU3kewbxeK2ygZXVx1cyHa9VdCPagasmu8hD1s=
 github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c/go.mod h1:fWoyaD76fE7mXZfkfcAfNeU/Hv/y6yJ/RgEcInQLwSw=
 github.com/streamingfast/dstore v0.1.1-0.20230512204716-ca0e4973e4f4 h1:qnHqPzHsE0T8+ul49QPRztbR1YcIdXRen8jxAgv572A=

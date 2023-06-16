@@ -9,6 +9,7 @@ import (
 	_ "github.com/mostynb/go-grpc-compression/zstd"
 	"github.com/streamingfast/bstream/transform"
 	"github.com/streamingfast/dauth"
+	dauthgrpc "github.com/streamingfast/dauth/middleware/grpc"
 	dgrpcserver "github.com/streamingfast/dgrpc/server"
 	"github.com/streamingfast/dgrpc/server/factory"
 	"github.com/streamingfast/dmetering"
@@ -74,14 +75,12 @@ func New(
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
 
-		id := dauth.GetAuthInfoFromIncomingContext(ctx)
-
+		userID, apiKeyID, ip := getAuthDetails(ctx)
 		event := dmetering.Event{
-			UserID:    id.UserID,
-			ApiKeyID:  id.ApiKeyID,
-			IpAddress: id.IP,
-
-			Endpoint: "sf.firehose.v2.Firehose/Blocks",
+			UserID:    userID,
+			ApiKeyID:  apiKeyID,
+			IpAddress: ip,
+			Endpoint:  "sf.firehose.v2.Firehose/Blocks",
 			Metrics: map[string]float64{
 				"egress_bytes":  float64(proto.Size(response)),
 				"written_bytes": float64(bytesWritten),
@@ -90,10 +89,7 @@ func New(
 			Timestamp: time.Now(),
 		}
 
-		err := dmetering.Emit(ctx, event)
-		if err != nil {
-			logger.Warn("unable to emit metrics event", zap.Error(err), zap.Object("event", event))
-		}
+		dmetering.Emit(ctx, event)
 		//////////////////////////////////////////////////////////////////////
 	}
 
@@ -104,8 +100,9 @@ func New(
 		dgrpcserver.WithPostUnaryInterceptor(otelgrpc.UnaryServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithGRPCServerOptions(grpc.MaxRecvMsgSize(25 * 1024 * 1024)),
+		dgrpcserver.WithPostUnaryInterceptor(dauthgrpc.UnaryAuthChecker(authenticator)),
+		dgrpcserver.WithPostStreamInterceptor(dauthgrpc.StreamAuthChecker(authenticator)),
 	}
-	//options = append(options, dgrpcserver.WithAuthChecker(authenticator.Check, authenticator.GetAuthTokenRequirement() == dauth.AuthTokenRequired))
 
 	if serviceDiscoveryURL != nil {
 		options = append(options, dgrpcserver.WithServiceDiscoveryURL(serviceDiscoveryURL))
