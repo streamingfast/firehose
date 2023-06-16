@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/mostynb/go-grpc-compression/zstd"
 	"github.com/streamingfast/bstream/transform"
-	dauth "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dauth"
 	dgrpcserver "github.com/streamingfast/dgrpc/server"
 	"github.com/streamingfast/dgrpc/server/factory"
 	"github.com/streamingfast/dmetering"
@@ -74,19 +74,25 @@ func New(
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
 
-		err := dmetering.Emit(ctx,
-			dmetering.Event{
-				Endpoint: "sf.firehose.v2.Firehose/Blocks",
-				Metrics: map[string]float64{
-					"egress_bytes":  float64(proto.Size(response)),
-					"written_bytes": float64(bytesWritten),
-					"read_bytes":    float64(bytesRead),
-				},
-				Timestamp: time.Now(),
+		id := dauth.GetAuthInfoFromIncomingContext(ctx)
+
+		event := dmetering.Event{
+			UserID:    id.UserID,
+			ApiKeyID:  id.ApiKeyID,
+			IpAddress: id.IP,
+
+			Endpoint: "sf.firehose.v2.Firehose/Blocks",
+			Metrics: map[string]float64{
+				"egress_bytes":  float64(proto.Size(response)),
+				"written_bytes": float64(bytesWritten),
+				"read_bytes":    float64(bytesRead),
 			},
-		)
+			Timestamp: time.Now(),
+		}
+
+		err := dmetering.Emit(ctx, event)
 		if err != nil {
-			logger.Warn("unable to emit metrics event", zap.Error(err))
+			logger.Warn("unable to emit metrics event", zap.Error(err), zap.Object("event", event))
 		}
 		//////////////////////////////////////////////////////////////////////
 	}

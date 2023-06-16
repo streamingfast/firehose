@@ -5,9 +5,9 @@ go 1.18
 require (
 	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/streamingfast/bstream v0.0.2-0.20221017131819-2a7e38be1047
-	github.com/streamingfast/dauth v0.0.0-20230609021534-e6a5970f5210
+	github.com/streamingfast/dauth v0.0.0-20230616111612-a1f92d641c59
 	github.com/streamingfast/dgrpc v0.0.0-20230612194237-65f8aded563b
-	github.com/streamingfast/dmetering v0.0.0-20230614204824-6dc94d6f8489
+	github.com/streamingfast/dmetering v0.0.0-20230615180916-dc7b78448003
 	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
 	github.com/streamingfast/dstore v0.1.1-0.20230512204716-ca0e4973e4f4
 	github.com/streamingfast/logging v0.0.0-20220511154537-ce373d264338

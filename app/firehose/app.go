@@ -24,7 +24,7 @@ import (
 	"github.com/streamingfast/bstream/blockstream"
 	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/bstream/transform"
-	dauth "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dauth"
 	dgrpcserver "github.com/streamingfast/dgrpc/server"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
