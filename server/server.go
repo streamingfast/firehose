@@ -75,11 +75,11 @@ func New(
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
 
-		userID, apiKeyID, ip := getAuthDetails(ctx)
+		auth := dauth.FromContext(ctx)
 		event := dmetering.Event{
-			UserID:    userID,
-			ApiKeyID:  apiKeyID,
-			IpAddress: ip,
+			UserID:    auth.UserID(),
+			ApiKeyID:  auth.APIKeyID(),
+			IpAddress: auth.RealIP(),
 			Endpoint:  "sf.firehose.v2.Firehose/Blocks",
 			Metrics: map[string]float64{
 				"egress_bytes":  float64(proto.Size(response)),
