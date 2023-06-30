@@ -206,6 +206,9 @@ func (a *App) IsReady(ctx context.Context) bool {
 	if a.modules.CheckPendingShutdown != nil && a.modules.CheckPendingShutdown() {
 		return false
 	}
+	if !a.modules.Authenticator.Ready(ctx) {
+		return false
+	}
 
 	return a.isReady.Load()
 }
