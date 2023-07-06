@@ -7,7 +7,7 @@ require (
 	github.com/streamingfast/bstream v0.0.2-0.20221017131819-2a7e38be1047
 	github.com/streamingfast/dauth v0.0.0-20230630134904-f19ce9a5b859
 	github.com/streamingfast/dgrpc v0.0.0-20230616153353-6bbf5534a79a
-	github.com/streamingfast/dmetering v0.0.0-20230616141703-390a8b480271
+	github.com/streamingfast/dmetering v0.0.0-20230706141508-cd783a0fb671
 	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
 	github.com/streamingfast/dstore v0.1.1-0.20230512204716-ca0e4973e4f4
 	github.com/streamingfast/logging v0.0.0-20220511154537-ce373d264338
