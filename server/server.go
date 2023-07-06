@@ -85,6 +85,7 @@ func New(
 				"egress_bytes":  float64(proto.Size(response)),
 				"written_bytes": float64(bytesWritten),
 				"read_bytes":    float64(bytesRead),
+				"block_count":   1,
 			},
 			Timestamp: time.Now(),
 		}
