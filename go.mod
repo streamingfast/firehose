@@ -6,6 +6,7 @@ require (
 	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/streamingfast/bstream v0.0.2-0.20221017131819-2a7e38be1047
 	github.com/streamingfast/dauth v0.0.0-20230711181128-22be70e6ca49
+	github.com/streamingfast/derr v0.0.0-20230515163924-8570aaa43fe1
 	github.com/streamingfast/dgrpc v0.0.0-20230616153353-6bbf5534a79a
 	github.com/streamingfast/dmetering v0.0.0-20230706141508-cd783a0fb671
 	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
@@ -79,12 +80,14 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rs/cors v1.8.3 // indirect
+	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/streamingfast/atm v0.0.0-20220131151839-18c87005e680 // indirect
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a // indirect
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308 // indirect
 	github.com/streamingfast/sf-tracing v0.0.0-20230519113358-f3dc5e582d12 // indirect
 	github.com/stretchr/testify v1.8.2 // indirect
+	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.9.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.15.1 // indirect

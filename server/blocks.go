@@ -41,6 +41,9 @@ func (s *Server) Block(ctx context.Context, request *pbfirehose.SingleBlockReque
 
 	blk, err := s.blockGetter.Get(ctx, blockNum, blockHash, s.logger)
 	if err != nil {
+		if _, ok := status.FromError(err); ok {
+			return nil, err
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if blk == nil {
