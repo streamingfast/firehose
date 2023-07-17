@@ -68,9 +68,19 @@ func (g *BlockGetter) Get(
 		return nil, status.Error(codes.NotFound, "live block not found in hub")
 	}
 
+	mergedBlocksStore := g.mergedBlocksStore
+	if clonable, ok := mergedBlocksStore.(dstore.Clonable); ok {
+		var err error
+		mergedBlocksStore, err = clonable.Clone(ctx)
+		if err != nil {
+			return nil, err
+		}
+		mergedBlocksStore.SetMeter(dmetering.GetBytesMeter(ctx))
+	}
+
 	// check for block in mergedBlocksStore
 	err = derr.RetryContext(ctx, 3, func(ctx context.Context) error {
-		blk, err := bstream.FetchBlockFromMergedBlocksStore(ctx, num, g.mergedBlocksStore)
+		blk, err := bstream.FetchBlockFromMergedBlocksStore(ctx, num, mergedBlocksStore)
 		if err != nil {
 			if errors.Is(err, dstore.ErrNotFound) {
 				return derr.NewFatalError(err)
@@ -90,7 +100,17 @@ func (g *BlockGetter) Get(
 
 	// check for block in forkedBlocksStore
 	if g.forkedBlocksStore != nil {
-		if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, g.forkedBlocksStore); blk != nil {
+		forkedBlocksStore := g.forkedBlocksStore
+		if clonable, ok := forkedBlocksStore.(dstore.Clonable); ok {
+			var err error
+			forkedBlocksStore, err = clonable.Clone(ctx)
+			if err != nil {
+				return nil, err
+			}
+			forkedBlocksStore.SetMeter(dmetering.GetBytesMeter(ctx))
+		}
+
+		if blk, _ := bstream.FetchBlockFromOneBlockStore(ctx, num, id, forkedBlocksStore); blk != nil {
 			reqLogger.Info("single block request", zap.String("source", "forked_blocks"), zap.Bool("found", true))
 			return blk, nil
 		}
