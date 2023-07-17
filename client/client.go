@@ -13,11 +13,11 @@ import (
 	"google.golang.org/grpc/credentials/oauth"
 )
 
-//	firehoseClient, closeFunc, grpcCallOpts, err := NewFirehoseClient(endpoint, jwt, insecure, plaintext)
-//  defer closeFunc()
-//	stream, err := firehoseClient.Blocks(context.Background(), request, grpcCallOpts...)
+// firehoseClient, closeFunc, grpcCallOpts, err := NewFirehoseClient(endpoint, jwt, insecure, plaintext)
+// defer closeFunc()
+// stream, err := firehoseClient.Blocks(context.Background(), request, grpcCallOpts...)
 func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainTextConnection bool) (cli pbfirehose.StreamClient, closeFunc func() error, callOpts []grpc.CallOption, err error) {
-	skipAuth := jwt == ""
+	skipAuth := jwt == "" || usePlainTextConnection
 
 	if useInsecureTSLConnection && usePlainTextConnection {
 		return nil, nil, nil, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
@@ -34,7 +34,7 @@ func NewFirehoseClient(endpoint, jwt string, useInsecureTSLConnection, usePlainT
 
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("unable to create external gRPC client")
+		return nil, nil, nil, fmt.Errorf("unable to create external gRPC client: %w", err)
 	}
 	closeFunc = conn.Close
 	cli = pbfirehose.NewStreamClient(conn)
@@ -62,14 +62,14 @@ func NewFirehoseFetchClient(endpoint, jwt string, useInsecureTSLConnection, useP
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
-	if jwt != "" {
+	if jwt != "" && !usePlainTextConnection {
 		credentials := oauth.NewOauthAccess(&oauth2.Token{AccessToken: jwt, TokenType: "Bearer"})
 		dialOptions = append(dialOptions, grpc.WithPerRPCCredentials(credentials))
 	}
 
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create external gRPC client")
+		return nil, nil, fmt.Errorf("unable to create external gRPC client: %w", err)
 	}
 	closeFunc = conn.Close
 	cli = pbfirehose.NewFetchClient(conn)
