@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/streamingfast/dmetering"
+
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/stream"
 	"github.com/streamingfast/firehose/metrics"
@@ -95,6 +97,14 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 		}
 	}
 
+	isLiveBlock := func(step pbfirehose.ForkStep) bool {
+		if step == pbfirehose.ForkStep_STEP_NEW {
+			return true
+		}
+
+		return false
+	}
+
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		cursorable := obj.(bstream.Cursorable)
 		cursor := cursorable.Cursor()
@@ -141,6 +151,14 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 		if err != nil {
 			logger.Info("stream send error", zap.Stringer("block", block), zap.Error(err))
 			return NewErrSendBlock(err)
+		}
+
+		if isLiveBlock(protoStep) {
+			payload, err := block.Payload.Get()
+			if err != nil {
+				return fmt.Errorf("unable to get block payload: %w", err)
+			}
+			dmetering.GetBytesMeter(ctx).AddBytesRead(len(payload))
 		}
 
 		level := zap.DebugLevel
