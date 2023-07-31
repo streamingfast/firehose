@@ -8,8 +8,8 @@ require (
 	github.com/streamingfast/dauth v0.0.0-20230711181128-22be70e6ca49
 	github.com/streamingfast/derr v0.0.0-20230515163924-8570aaa43fe1
 	github.com/streamingfast/dgrpc v0.0.0-20230616153353-6bbf5534a79a
-	github.com/streamingfast/dmetering v0.0.0-20230706141508-cd783a0fb671
-	github.com/streamingfast/dmetrics v0.0.0-20220811180000-3e513057d17c
+	github.com/streamingfast/dmetering v0.0.0-20230731155453-e1df53e362aa
+	github.com/streamingfast/dmetrics v0.0.0-20230516031116-28fcfeb4b9ed
 	github.com/streamingfast/dstore v0.1.1-0.20230512204716-ca0e4973e4f4
 	github.com/streamingfast/logging v0.0.0-20220511154537-ce373d264338
 	github.com/streamingfast/pbgo v0.0.6-0.20221014191646-3a05d7bc30c8
