@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/streamingfast/dauth"
 	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dmetering"
 
@@ -185,7 +186,17 @@ func (sf *StreamFactory) New(
 		options = append(options, stream.WithFinalBlocksOnly())
 	}
 
-	reqLogger.Info("processing incoming blocks request")
+	var fields []zap.Field
+	auth := dauth.FromContext(ctx)
+	if auth != nil {
+		fields = append(fields,
+			zap.String("api_key_id", auth.APIKeyID()),
+			zap.String("user_id", auth.UserID()),
+			zap.String("real_ip", auth.RealIP()),
+		)
+	}
+
+	reqLogger.Info("processing incoming blocks request", fields...)
 
 	if request.Cursor != "" {
 		cur, err := bstream.CursorFromOpaque(request.Cursor)

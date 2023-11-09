@@ -65,6 +65,7 @@ func New(
 	initFunc := func(ctx context.Context, request *pbfirehoseV2.Request) context.Context {
 		//////////////////////////////////////////////////////////////////////
 		ctx = dmetering.WithBytesMeter(ctx)
+		ctx = withRequestMeter(ctx)
 		return ctx
 		//////////////////////////////////////////////////////////////////////
 	}
@@ -74,6 +75,7 @@ func New(
 		meter := dmetering.GetBytesMeter(ctx)
 		bytesRead := meter.BytesReadDelta()
 		bytesWritten := meter.BytesWrittenDelta()
+		size := proto.Size(response)
 
 		auth := dauth.FromContext(ctx)
 		event := dmetering.Event{
@@ -82,7 +84,7 @@ func New(
 			IpAddress: auth.RealIP(),
 			Endpoint:  "sf.firehose.v2.Firehose/Blocks",
 			Metrics: map[string]float64{
-				"egress_bytes":  float64(proto.Size(response)),
+				"egress_bytes":  float64(size),
 				"written_bytes": float64(bytesWritten),
 				"read_bytes":    float64(bytesRead),
 				"block_count":   1,
@@ -90,6 +92,9 @@ func New(
 			Timestamp: time.Now(),
 		}
 
+		requestMeter := getRequestMeter(ctx)
+		requestMeter.blocks++
+		requestMeter.egressBytes += size
 		dmetering.Emit(ctx, event)
 		//////////////////////////////////////////////////////////////////////
 	}
@@ -152,4 +157,26 @@ func createHealthCheck(isReady func(ctx context.Context) bool) dgrpcserver.Healt
 	return func(ctx context.Context) (bool, interface{}, error) {
 		return isReady(ctx), nil, nil
 	}
+}
+
+type key int
+
+var requestMeterKey key
+
+type requestMeter struct {
+	blocks      uint64
+	egressBytes int
+}
+
+func getRequestMeter(ctx context.Context) *requestMeter {
+	if rm, ok := ctx.Value(requestMeterKey).(*requestMeter); ok {
+		return rm
+	}
+	return &requestMeter{} // not so useful but won't break tests
+}
+func withRequestMeter(ctx context.Context) context.Context {
+	if _, ok := ctx.Value(requestMeterKey).(*requestMeter); ok {
+		return ctx
+	}
+	return context.WithValue(ctx, requestMeterKey, &requestMeter{})
 }

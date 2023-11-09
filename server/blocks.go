@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/streamingfast/dauth"
 	"github.com/streamingfast/dmetering"
 
 	"github.com/streamingfast/bstream"
@@ -69,8 +70,6 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 	logger := logging.Logger(ctx, s.logger)
 
 	if s.rateLimiter != nil {
-		logger = logger.With(zap.Stringer("rate_limiter", s.rateLimiter))
-
 		rlCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
@@ -105,7 +104,9 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 		return false
 	}
 
+	var blockCount uint64
 	handlerFunc := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+		blockCount++
 		cursorable := obj.(bstream.Cursorable)
 		cursor := cursorable.Cursor()
 
@@ -235,7 +236,23 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 	}
 
 	err = str.Run(ctx)
-	logger.Info("firehose process completed", zap.Error(err))
+	meter := getRequestMeter(ctx)
+
+	fields := []zap.Field{
+		zap.Uint64("block_sent", meter.blocks),
+		zap.Int("egress_bytes", meter.egressBytes),
+		zap.Error(err),
+	}
+
+	auth := dauth.FromContext(ctx)
+	if auth != nil {
+		fields = append(fields,
+			zap.String("api_key_id", auth.APIKeyID()),
+			zap.String("user_id", auth.UserID()),
+			zap.String("real_ip", auth.RealIP()),
+		)
+	}
+	logger.Info("firehose process completed", fields...)
 	if err != nil {
 		if errors.Is(err, stream.ErrStopBlockReached) {
 			logger.Info("stream of blocks reached end block")
