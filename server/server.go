@@ -82,6 +82,7 @@ func New(
 			UserID:    auth.UserID(),
 			ApiKeyID:  auth.APIKeyID(),
 			IpAddress: auth.RealIP(),
+			Meta:      auth.Meta(),
 			Endpoint:  "sf.firehose.v2.Firehose/Blocks",
 			Metrics: map[string]float64{
 				"egress_bytes":  float64(size),
