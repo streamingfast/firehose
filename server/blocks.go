@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -74,7 +75,8 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 		defer cancel()
 
 		if allow := s.rateLimiter.Take(rlCtx, "", "Blocks"); !allow {
-			<-time.After(time.Millisecond * 500) // force a minimal backoff
+			jitterDelay := time.Duration(rand.Intn(3000) + 1000) // force a minimal backoff
+			<-time.After(time.Millisecond * jitterDelay)
 			return status.Error(codes.Unavailable, "rate limit exceeded")
 		} else {
 			defer s.rateLimiter.Return()
