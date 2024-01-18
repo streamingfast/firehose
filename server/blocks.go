@@ -152,7 +152,7 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 		start := time.Now()
 		err := streamSrv.Send(resp)
 		if err != nil {
-			logger.Info("stream send error", zap.Stringer("block", block), zap.Error(err))
+			logger.Info("stream send error", zap.Uint64("block_num", block.Number), zap.String("block_id", block.Id), zap.Error(err))
 			return NewErrSendBlock(err)
 		}
 

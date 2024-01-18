@@ -1,6 +1,6 @@
 module github.com/streamingfast/firehose
 
-go 1.18
+go 1.21
 
 require (
 	github.com/mostynb/go-grpc-compression v1.1.17
