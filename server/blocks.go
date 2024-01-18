@@ -169,7 +169,7 @@ func (s *Server) Blocks(request *pbfirehose.Request, streamSrv pbfirehose.Stream
 			level = zap.InfoLevel
 		}
 
-		logger.Check(level, "stream sent block").Write(zap.Stringer("block", block), zap.Duration("duration", time.Since(start)))
+		logger.Check(level, "stream sent block").Write(zap.Uint64("block_num", block.Number), zap.String("block_id", block.Id), zap.Duration("duration", time.Since(start)))
 
 		return nil
 	})
